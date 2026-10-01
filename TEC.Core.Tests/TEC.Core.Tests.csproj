@@ -8,7 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.12" />
-    <PackageReference Include="TUnit" Version="1.72.4" />
+    <PackageReference Include="TUnit" Version="1.72.10" />
   </ItemGroup>
 
   <!-- ToListAsync (System.Linq.AsyncEnumerable) faz parte do .NET 10; no .NET 8 vem do pacote -->
