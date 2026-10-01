@@ -33,7 +33,7 @@ env:
 jobs:
   validar:
     name: Validar versão
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       version: ${{ steps.validar.outputs.version }}
 
@@ -83,7 +83,7 @@ jobs:
   release:
     name: Criar tag e release
     needs: [validar, build]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
 
@@ -112,7 +112,7 @@ jobs:
   publicar:
     name: Publicar no GitHub Packages
     needs: [validar, release]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       packages: write   # push no feed NuGet do GitHub
 

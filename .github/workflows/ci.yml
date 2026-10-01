@@ -43,7 +43,7 @@ env:
 jobs:
   build:
     name: Build, testes e pacote
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       version: ${{ steps.version.outputs.version }}
 
@@ -189,7 +189,7 @@ jobs:
       inputs.version == '' &&
       (github.event_name == 'release' ||
       (github.event_name == 'push' && github.ref == 'refs/heads/main'))
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       packages: write   # push no feed NuGet do GitHub
       contents: write   # anexar os pacotes ao Release
