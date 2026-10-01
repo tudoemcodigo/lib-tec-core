@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Configurações comuns (framework, analisadores, auditoria, lock file, determinismo e metadados) em ../Directory.Build.props -->
+  <PropertyGroup>
+    <RootNamespace>TEC.Core</RootNamespace>
+  </PropertyGroup>
+
+  <!-- Metadados do pacote NuGet (feed interno) -->
+  <PropertyGroup>
+    <PackageId>TEC.Core</PackageId>
+    <Version>0.0.1</Version>
+    <PackageIcon>Logo.png</PackageIcon>
+    <Description>Funções padronizadas: criptografia, formatação/validação de texto (Brasil), datas e dias úteis, retorno padronizado de API, CSV e utilitários.</Description>
+    <PackageTags>core;utils;cryptography;csv;business-days;brasil</PackageTags>
+    <RepositoryUrl>https://github.com/tudoemcodigo/lib-tec-core</RepositoryUrl>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
+    <None Include="Images\Logo.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.12" />
+  </ItemGroup>
+
+</Project>

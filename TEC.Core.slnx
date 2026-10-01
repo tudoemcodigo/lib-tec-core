@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="TEC.Core.Tests/TEC.Core.Tests.csproj" />
+  <Project Path="TEC.Core/TEC.Core.csproj" />
+</Solution>
