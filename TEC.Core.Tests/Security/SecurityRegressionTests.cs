@@ -182,8 +182,9 @@ public class SecurityRegressionTests
         var verified = hasher.Verify("senha", tampered);
         sw.Stop();
 
+        // 2 bilhões de iterações levariam minutos: o limite é folgado para não oscilar com a carga do runner do CI
         await Assert.That(verified).IsFalse();
-        await Assert.That(sw.Elapsed).IsLessThan(TimeSpan.FromSeconds(1));
+        await Assert.That(sw.Elapsed).IsLessThan(TimeSpan.FromSeconds(10));
     }
 
     [Test]

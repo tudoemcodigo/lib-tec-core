@@ -63,14 +63,26 @@ public class HashingTests
         await Assert.That(hasher.Verify("senha-forte", stored)).IsTrue();
 
         // O custo da verificação fictícia deve ser da mesma ordem da verificação real (não retorna imediatamente)
-        var real = System.Diagnostics.Stopwatch.StartNew();
-        hasher.Verify("outra-senha", stored);
-        real.Stop();
-        var dummy = System.Diagnostics.Stopwatch.StartNew();
-        hasher.Verify("outra-senha", null);
-        dummy.Stop();
+        // Melhor de várias medições: uma medição única oscila com a carga da máquina (testes em paralelo, runner do CI)
+        var real = Fastest(() => hasher.Verify("outra-senha", stored));
+        var dummy = Fastest(() => hasher.Verify("outra-senha", null));
 
-        await Assert.That(dummy.Elapsed.TotalMilliseconds).IsGreaterThan(real.Elapsed.TotalMilliseconds / 4);
+        await Assert.That(dummy.TotalMilliseconds).IsGreaterThan(real.TotalMilliseconds / 4);
+    }
+
+    private static TimeSpan Fastest(Action action)
+    {
+        var best = TimeSpan.MaxValue;
+        for (int i = 0; i < 5; i++)
+        {
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            action();
+            watch.Stop();
+            if (watch.Elapsed < best)
+                best = watch.Elapsed;
+        }
+
+        return best;
     }
 
     [Test]
