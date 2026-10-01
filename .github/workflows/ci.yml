@@ -143,7 +143,7 @@ jobs:
 
       - name: Relatório de cobertura
         if: ${{ !cancelled() }}
-        uses: danielpalme/ReportGenerator-GitHub-Action@c31aa4ed4f12f147061186cf2a029f307b5c3636 # v5.5.9
+        uses: danielpalme/ReportGenerator-GitHub-Action@d3ebf1f760f7d8ab92cc44d9bcfee7ad73722a31 # v5.5.11
         with:
           reports: coverage/*.cobertura.xml
           targetdir: coverage-report
