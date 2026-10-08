@@ -32,7 +32,7 @@
 | 13 | [🔀 Concorrência](concorrencia.md) | Como evitar execuções simultâneas da mesma operação cara (cache stampede) | `SingleFlight<TKey, TValue>` |
 | 14 | [🛡️ Segurança](seguranca.md) | O que o componente garante, o que é sua responsabilidade; identidade da operação | `ICurrentUser`, `PrincipalKind` |
 | 15 | [🧪 Testes](testes.md) | Categorias, como rodar local e no CI, variáveis `TEC_CARGA_*`, carga e benchmarks | — |
-| 16 | [🛠️ Desenvolvimento](desenvolvimento.md) | Como compilar com os repositórios vizinhos, lock files, contribuição e publicação | — |
+| 16 | [🛠️ Desenvolvimento](desenvolvimento.md) | Como compilar, testar mudanças nos dependentes com o modo local (`-p:TecUseLocalProjects=true`), lock files, contribuição e publicação | — |
 
 Fora de `docs/`: [🧰 Samples](../samples/README.md) (API de exemplo e gerador de carga) · [⚙️ CI/CD](../.github/workflows/README.md) (workflows e publicação) · [📝 Changelog](../CHANGELOG.md).
 
