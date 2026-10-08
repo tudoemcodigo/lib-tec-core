@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!--
+    API de exemplo que usa o TEC.Core nos cenários típicos (feriados, dias úteis, documentos, criptografia e CSV).
+    Serve de alvo para o gerador de carga (TEC.Core.LoadGenerator) e para os testes de carga (TEC.Core.LoadTests).
+    Não é publicada: IsPackable = false. Framework, lock file e auditoria de pacotes em ../../Directory.Build.props.
+  -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\TEC.Core\TEC.Core.csproj" />
+  </ItemGroup>
+
+</Project>
