@@ -40,7 +40,7 @@ flowchart LR
     Q -- não --> E{"..\TEC.Core\TEC.Core\<br/>TEC.Core.csproj existe?"}
     E -- sim --> PR["ProjectReference<br/><sub>mudança no Core vista na hora</sub>"]
     E -- não --> PK
-    Q -- sim --> PK["PackageReference 0.0.1<br/><sub>o que o consumidor recebe</sub>"]
+    Q -- sim --> PK["PackageReference na versão do<br/>Directory.Packages.props<br/>do outro componente<br/><sub>o que o consumidor recebe</sub>"]
 ```
 
 ---
@@ -80,6 +80,13 @@ dotnet build TEC.Vault.slnx
 # No TEC.Vault, usando o pacote publicado
 dotnet build TEC.Vault.slnx -p:TecUseLocalProjects=false
 ```
+
+> [!TIP]
+> No modo pacote, cada dependente usa a versão do TEC.Core declarada no **próprio** `Directory.Packages.props`
+> (`<PackageVersion Include="TEC.Core" Version="0.0.1" />`); o csproj mantém só `<TecReference Include="TEC.Core" />`,
+> sem versão, e o Dependabot abre o PR quando sai uma versão nova. Para um dependente adotar outra versão do TEC.Core,
+> altere esse `PackageVersion` lá e regenere os locks dele. Os componentes evoluem de forma independente: o TEC.Core
+> pode ficar em `0.0.1` enquanto os dependentes sobem a própria `<Version>`.
 
 ### Lock files
 
@@ -151,7 +158,7 @@ flowchart LR
 
 Fluxo: PR → merge na `main` → **prévia automática**: o CI do push na `main`, com `ci-ok` verde, publica `<Version>-preview.N` (ex.: `0.0.1-preview.3`, com a `<Version>` do `Directory.Build.props`). Em PR nada é publicado.
 
-Versão estável ou release candidate: workflow **Publicar versão** (`release.yml`): Actions → **Publicar versão** → **Run workflow** → versão (`0.0.1` ou `1.1.0-rc.1`; prévias não são digitadas aqui). Ele roda convenções, pack, unitários ×3 com cobertura e CodeQL, cria a tag e o Release e só então publica no feed. Depois de publicar `X.Y.Z`, suba a `<Version>` do `Directory.Build.props` para a próxima: se a tag `v<Version>` já existe, o CI falha pedindo esse ajuste. Testes de carga não entram em nenhum dos dois: só no `performance.yml`, manual. Detalhes e checklist em [⚙️ CI/CD](../.github/workflows/README.md).
+Versão estável ou release candidate: workflow **Publicar versão** (`release.yml`): Actions → **Publicar versão** → **Run workflow** → versão (`0.0.1` ou `1.1.0-rc.1`; prévias não são digitadas aqui). Ele roda convenções, pack, unitários ×3 com cobertura e CodeQL, cria a tag e o Release e só então publica no feed. Depois de publicar `X.Y.Z`, suba a `<Version>` do `Directory.Build.props` para a próxima quando quiser novas prévias: enquanto a tag `v<Version>` existir, o CI do push na `main` valida tudo normalmente, mas não gera prévia (emite um `::notice::` e pula o `publicar-previa`). O TEC.Core pode ficar em `0.0.1` e ainda receber correções de build e documentação na `main`. Testes de carga não entram em nenhum dos dois: só no `performance.yml`, manual. Detalhes e checklist em [⚙️ CI/CD](../.github/workflows/README.md).
 
 ---
 
