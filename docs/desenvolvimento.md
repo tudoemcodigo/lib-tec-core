@@ -32,15 +32,15 @@
 | Build compartilhado | `build/Tec.Build.props` e `build/Tec.Build.targets` (canônicos, vindos do [tec-workflows](https://github.com/tudoemcodigo/tec-workflows)) |
 | Dependências de terceiros | Versões só em `Directory.Packages.props` (Central Package Management) |
 
-Os componentes ficam lado a lado em `D:\Projetos\Componentes\TEC.*`. O TEC.Core é a base: **não referencia nenhum outro componente**, mas é referenciado por todos (exceto o TEC.Observability) via `<TecReference>`.
+Os componentes ficam lado a lado em `D:\Projetos\Componentes\TEC.*`. O TEC.Core é a base: **não referencia nenhum outro componente** (compila sem o feed `tec-interno`), mas é referenciado por todos (exceto o TEC.Observability) via `<TecReference>`. Nos dependentes, o padrão, na máquina e no CI, é o pacote publicado do TEC.Core; o projeto vizinho só entra sob demanda:
 
 ```mermaid
 flowchart LR
-    CSPROJ["Outro componente<br/>&lt;TecReference Include=&quot;TEC.Core&quot; /&gt;"] --> Q{"CI=true ou<br/>TecUseLocalProjects=false?"}
-    Q -- não --> E{"..\TEC.Core\TEC.Core\<br/>TEC.Core.csproj existe?"}
+    CSPROJ["Outro componente<br/>&lt;TecReference Include=&quot;TEC.Core&quot; /&gt;"] --> Q{"TecUseLocalProjects=true<br/>(fora do CI)?"}
+    Q -- "não (padrão)" --> PK["PackageReference do tec-interno<br/>na versão do Directory.Packages.props<br/>do outro componente<br/><sub>o que o consumidor recebe</sub>"]
+    Q -- sim --> E{"..\TEC.Core\TEC.Core\<br/>TEC.Core.csproj existe?"}
     E -- sim --> PR["ProjectReference<br/><sub>mudança no Core vista na hora</sub>"]
     E -- não --> PK
-    Q -- sim --> PK["PackageReference na versão do<br/>Directory.Packages.props<br/>do outro componente<br/><sub>o que o consumidor recebe</sub>"]
 ```
 
 ---
@@ -70,15 +70,16 @@ O `dotnet pack` gera o `.nupkg` com `lib/net8.0`, `lib/net10.0`, a documentaçã
 Para testar uma mudança do TEC.Core num componente que depende dele (ex.: TEC.Vault) **sem publicar pacote**:
 
 1. Clone os repositórios lado a lado: `D:\Projetos\Componentes\TEC.Core` e `D:\Projetos\Componentes\TEC.Vault`.
-2. Compile o dependente normalmente. Fora do CI, o `<TecReference Include="TEC.Core" />` vira `ProjectReference` para `..\TEC.Core\TEC.Core\TEC.Core.csproj` automaticamente.
-3. Para compilar o dependente como o consumidor real (pacote do feed), use `-p:TecUseLocalProjects=false`.
+2. Compile o dependente com `-p:TecUseLocalProjects=true`: o `<TecReference Include="TEC.Core" />` vira `ProjectReference` para `..\TEC.Core\TEC.Core\TEC.Core.csproj` (sem o vizinho, continua pacote; no CI a opção é ignorada).
+3. Sem a opção, o dependente compila como o consumidor real: pacote do feed `tec-interno`, que é o padrão e exige a credencial de leitura do feed na máquina (`dotnet nuget update source tec-interno -u <usuario-github> -p <PAT com read:packages>`).
 
 ```bash
-# No TEC.Vault, usando o TEC.Core local
-dotnet build TEC.Vault.slnx
+# No TEC.Vault, usando o TEC.Core local (modo local, sob demanda)
+dotnet build TEC.Vault.slnx -p:TecUseLocalProjects=true
+dotnet test --project TEC.Vault.Tests -p:TecUseLocalProjects=true
 
-# No TEC.Vault, usando o pacote publicado
-dotnet build TEC.Vault.slnx -p:TecUseLocalProjects=false
+# No TEC.Vault, usando o pacote publicado (padrão)
+dotnet build TEC.Vault.slnx
 ```
 
 > [!TIP]
@@ -93,16 +94,16 @@ dotnet build TEC.Vault.slnx -p:TecUseLocalProjects=false
 | Arquivo | Versionado? | Quando é usado |
 |---|:---:|---|
 | `packages.lock.json` | ✅ | Sempre no modo pacote; restore com `--locked-mode` no CI (`RestoreLockedMode` quando `CI=true`) |
-| `packages.local.lock.json` | ❌ (`.gitignore`) | Nos componentes dependentes, no modo local (`TecReference` → `ProjectReference`) |
+| `packages.local.lock.json` | ❌ (`.gitignore`) | Nos componentes dependentes, no modo local sob demanda (`-p:TecUseLocalProjects=true`: `TecReference` → `ProjectReference`) |
 
-O TEC.Core não tem `TecReference`, então o lock dele é **o mesmo nos dois modos** e nunca gera `packages.local.lock.json`. Nos componentes dependentes, o `packages.lock.json` versionado é regenerado em modo pacote:
+O TEC.Core não tem `TecReference`, então o lock dele é **o mesmo nos dois modos** e nunca gera `packages.local.lock.json`. Nos componentes dependentes, o `packages.lock.json` versionado é o do modo pacote (o padrão) e é regenerado com um restore simples:
 
 ```bash
 # Depois de mudar uma versão em Directory.Packages.props (no TEC.Core)
 dotnet restore TEC.Core.slnx --force-evaluate
 
 # Num componente dependente (exige o TEC.Core já publicado no feed)
-dotnet restore TEC.Vault.slnx -p:TecUseLocalProjects=false --force-evaluate
+dotnet restore TEC.Vault.slnx --force-evaluate
 ```
 
 Faça commit de todos os `packages.lock.json` alterados (biblioteca, testes, carga, benchmarks e samples).
@@ -166,8 +167,8 @@ Versão estável ou release candidate: workflow **Publicar versão** (`release.y
 
 | Propriedade MSBuild | Padrão | Efeito |
 |---|---|---|
-| `TecUseLocalProjects` | `true` fora do CI; `false` com `CI=true` | Nos dependentes, `TecReference` vira `ProjectReference` (local) ou `PackageReference` |
-| `CI` | definida pelo GitHub Actions | Ativa `RestoreLockedMode` e o modo pacote |
+| `TecUseLocalProjects` | `false` (sempre `false` com `CI=true`) | Nos dependentes, `true` faz o `TecReference` virar `ProjectReference` para o TEC.Core vizinho; senão, `PackageReference` |
+| `CI` | definida pelo GitHub Actions | Ativa `RestoreLockedMode` e ignora o `TecUseLocalProjects` (sempre modo pacote) |
 | `Version` | `0.0.1` (em `Directory.Build.props`) | Versão local e base das prévias do CI (`<Version>-preview.N`); a release usa a versão digitada no workflow. Suba depois de publicar `X.Y.Z` |
 
 ---
@@ -197,7 +198,7 @@ Versão estável ou release candidate: workflow **Publicar versão** (`release.y
 <details>
 <summary>Preciso publicar o TEC.Core para testar uma mudança no TEC.Vault?</summary>
 
-Não. Com os repositórios lado a lado, o `TecReference` usa o projeto local automaticamente. Só a regeneração do `packages.lock.json` do TEC.Vault em modo pacote exige a versão publicada.
+Não. Com os repositórios lado a lado, compile e teste o TEC.Vault com `-p:TecUseLocalProjects=true` e o `TecReference` usa o projeto local. Sem a opção (o padrão), o TEC.Vault usa o pacote publicado; a regeneração do `packages.lock.json` versionado do TEC.Vault também exige a versão publicada.
 
 </details>
 
