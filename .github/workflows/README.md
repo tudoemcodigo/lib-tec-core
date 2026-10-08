@@ -185,7 +185,7 @@ Permissões dos workflows: padrão `contents: read`; `contents: write`/`packages
 
 | Ecossistema | Frequência | Agrupamento |
 |---|---|---|
-| NuGet | Semanal (segunda), cooldown de 7 dias | Um PR com todas as minor/patch; major em PRs separados |
+| NuGet | Semanal (segunda), cooldown de 7 dias | Um PR com todas as minor/patch; major em PRs separados. ASP.NET Core, EF Core e Roslyn ficam de fora e são atualizados à mão ([dependências pareadas](https://github.com/tudoemcodigo/tec-workflows/blob/main/docs/padroes.md#dependências-pareadas-atualizadas-à-mão)) |
 | GitHub Actions | Semanal (segunda), cooldown de 7 dias | Workflows centrais num único PR |
 
 Actions de terceiros ficam fixadas por SHA no `tec-workflows`; os workflows da organização usam a tag `v1`. O `zizmor` audita os workflows (`uvx zizmor .`).
