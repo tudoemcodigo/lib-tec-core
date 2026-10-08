@@ -13,7 +13,7 @@ namespace TEC.Core.Tests.Security.Adversarial;
 /// classes de entrada intercaladas aleatoriamente) são pesados e ruidosos: rodam sob demanda, na categoria
 /// <see cref="HeavyCategory"/> (veja docs/testes.md).
 /// </remarks>
-[NotInParallel(DosResistanceTests.TimingKey)]
+[NotInParallel]
 public class ConstantTimeTests
 {
     /// <summary>Categoria dos testes de segurança pesados ([Explicit]).</summary>

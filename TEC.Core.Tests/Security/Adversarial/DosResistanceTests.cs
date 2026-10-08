@@ -22,15 +22,14 @@ namespace TEC.Core.Tests.Security.Adversarial;
 /// provocam backtracking, calendários impossíveis) precisam falhar rápido, com leitura e memória limitadas.
 /// </summary>
 /// <remarks>
-/// Os limites de tempo são folgados (máquinas de CI lentas e testes em paralelo): pegam laços sem fim e crescimento
-/// quadrático/exponencial, não pequenas regressões de desempenho (essas ficam com o TEC.Core.Benchmarks).
+/// Os limites de tempo são folgados (máquinas de CI lentas): pegam laços sem fim e crescimento quadrático/exponencial,
+/// não pequenas regressões de desempenho (essas ficam com o TEC.Core.Benchmarks). A classe roda com exclusividade
+/// ([NotInParallel] sem chave): mede tempo de parede, e a suíte inteira em paralelo num runner de 2 vCPUs estoura os
+/// limites sem regressão nenhuma.
 /// </remarks>
-[NotInParallel(TimingKey)]
+[NotInParallel]
 public class DosResistanceTests
 {
-    /// <summary>Chave compartilhada com os testes de tempo constante: não rodam ao mesmo tempo.</summary>
-    public const string TimingKey = "seguranca-tempo";
-
     private static readonly TimeSpan Fast = TimeSpan.FromSeconds(5);
 
     public sealed class Row
