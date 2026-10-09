@@ -153,6 +153,33 @@ string text = result.Match(
 return ApiResponse<CustomerDto>.FromResult(result);            // 404 automaticamente
 ```
 
+**Composição (`Bind`, `Ensure`, `BindAsync`, `MapAsync`)**
+
+| Membro | Em | Descrição |
+|---|---|---|
+| `Bind(Func<Result>)` / `Bind<TOut>(Func<Result<TOut>>)` | `Result` | Executa a próxima operação só no sucesso; na falha devolve os mesmos erros |
+| `BindAsync(Func<Task<Result>>)` | `Result` | Igual, com operação assíncrona |
+| `Bind<TOut>(Func<T, Result<TOut>>)` / `Bind(Func<T, Result>)` | `Result<T>` | Encadeia uma operação que recebe o valor |
+| `BindAsync<TOut>(Func<T, Task<Result<TOut>>>)` / `BindAsync(Func<T, Task<Result>>)` | `Result<T>` | Igual, com operação assíncrona |
+| `Ensure(Func<T, bool>, Error)` | `Result<T>` | Mantém o sucesso só se o valor atender à condição |
+| `BindAsync` / `MapAsync` | `Task<Result<T>>` (`ResultTaskExtensions`) | Encadeiam direto sobre a tarefa, sem `await` intermediário |
+
+Todos param na **primeira falha** (as operações seguintes não executam) e preservam **todos** os erros dela.
+
+```csharp
+// Antes: um if por passo
+var pedido = await CarregarAsync(id, ct);
+if (pedido.IsFailure) return pedido.ToFailure<PedidoDto>();
+var aprovado = pedido.Value.Aprovar(agora);
+if (aprovado.IsFailure) return aprovado.ToFailure<PedidoDto>();
+return pedido.Value.ToDto();
+
+// Depois
+return await CarregarAsync(id, ct)
+    .BindAsync(p => p.Aprovar(agora).Bind(() => Result.Success(p)))
+    .MapAsync(p => p.ToDto());
+```
+
 Use `Result` quando o erro faz parte do fluxo esperado e o chamador deve tratá-lo; use [exceções](excecoes.md#exceção-ou-result) para situações excepcionais que sobem até o tratamento global. As duas convergem no mesmo [`ApiResponse`](respostas-api.md#fromresult-e-fromexception).
 
 ### Error
@@ -409,4 +436,4 @@ Não: o construtor é `private protected` para impedir subclasses com estado inv
 </details>
 
 ---
-⬅️ [Instalação](instalacao.md) · [📚 Índice](README.md) · [Respostas de API](respostas-api.md) ➡️
+⬅️ [Instalação](instalacao.md) · [📚 Índice](README.md) · [Domínio](dominio.md) ➡️

@@ -600,4 +600,4 @@ Ele não é preenchido automaticamente: copie `RateLimitExceededException.RetryA
 </details>
 
 ---
-⬅️ [Common](common.md) · [📚 Índice](README.md) · [Exceções](excecoes.md) ➡️
+⬅️ [Domínio](dominio.md) · [📚 Índice](README.md) · [Exceções](excecoes.md) ➡️
