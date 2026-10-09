@@ -58,6 +58,34 @@ public class Result
     /// <exception cref="InvalidOperationException">O resultado é de sucesso.</exception>
     public Result<TOut> ToFailure<TOut>() => Result<TOut>.Failure([.. FailureErrors()]);
 
+    /// <summary>Encadeia outra operação, executada só se esta teve sucesso.</summary>
+    /// <param name="next">Próxima operação.</param>
+    /// <returns>O resultado de <paramref name="next"/> ou esta falha.</returns>
+    public Result Bind(Func<Result> next)
+    {
+        ArgumentNullException.ThrowIfNull(next);
+        return IsSuccess ? next() : this;
+    }
+
+    /// <summary>Encadeia uma operação que produz um valor, executada só se esta teve sucesso.</summary>
+    /// <typeparam name="TOut">Tipo do valor produzido.</typeparam>
+    /// <param name="next">Próxima operação.</param>
+    /// <returns>O resultado de <paramref name="next"/> ou os erros desta falha.</returns>
+    public Result<TOut> Bind<TOut>(Func<Result<TOut>> next)
+    {
+        ArgumentNullException.ThrowIfNull(next);
+        return IsSuccess ? next() : ToFailure<TOut>();
+    }
+
+    /// <summary>Encadeia uma operação assíncrona, executada só se esta teve sucesso.</summary>
+    /// <param name="next">Próxima operação.</param>
+    /// <returns>O resultado de <paramref name="next"/> ou esta falha.</returns>
+    public async Task<Result> BindAsync(Func<Task<Result>> next)
+    {
+        ArgumentNullException.ThrowIfNull(next);
+        return IsSuccess ? await next().ConfigureAwait(false) : this;
+    }
+
     private IReadOnlyList<Error> FailureErrors() => IsFailure
         ? Errors
         : throw new InvalidOperationException("Não é possível propagar os erros de um resultado de sucesso.");
@@ -96,6 +124,56 @@ public sealed class Result<T> : Result
     {
         ArgumentNullException.ThrowIfNull(mapper);
         return IsSuccess ? Result<TOut>.Success(mapper(_value!)) : ToFailure<TOut>();
+    }
+
+    /// <summary>Encadeia uma operação que depende do valor, executada só em caso de sucesso.</summary>
+    /// <typeparam name="TOut">Tipo do valor produzido.</typeparam>
+    /// <param name="next">Próxima operação, que recebe o valor.</param>
+    /// <returns>O resultado de <paramref name="next"/> ou os erros desta falha.</returns>
+    /// <example><code>return Pedido.Criar(dados).Bind(p => estoque.Reservar(p)).Map(p => p.Id);</code></example>
+    public Result<TOut> Bind<TOut>(Func<T, Result<TOut>> next)
+    {
+        ArgumentNullException.ThrowIfNull(next);
+        return IsSuccess ? next(_value!) : ToFailure<TOut>();
+    }
+
+    /// <summary>Encadeia uma operação sem valor que depende do valor, executada só em caso de sucesso.</summary>
+    /// <param name="next">Próxima operação, que recebe o valor.</param>
+    /// <returns>O resultado de <paramref name="next"/> ou os erros desta falha.</returns>
+    public Result Bind(Func<T, Result> next)
+    {
+        ArgumentNullException.ThrowIfNull(next);
+        return IsSuccess ? next(_value!) : ToFailure();
+    }
+
+    /// <summary>Encadeia uma operação assíncrona que depende do valor, executada só em caso de sucesso.</summary>
+    /// <typeparam name="TOut">Tipo do valor produzido.</typeparam>
+    /// <param name="next">Próxima operação, que recebe o valor.</param>
+    /// <returns>O resultado de <paramref name="next"/> ou os erros desta falha.</returns>
+    public async Task<Result<TOut>> BindAsync<TOut>(Func<T, Task<Result<TOut>>> next)
+    {
+        ArgumentNullException.ThrowIfNull(next);
+        return IsSuccess ? await next(_value!).ConfigureAwait(false) : ToFailure<TOut>();
+    }
+
+    /// <summary>Encadeia uma operação assíncrona sem valor que depende do valor, executada só em caso de sucesso.</summary>
+    /// <param name="next">Próxima operação, que recebe o valor.</param>
+    /// <returns>O resultado de <paramref name="next"/> ou os erros desta falha.</returns>
+    public async Task<Result> BindAsync(Func<T, Task<Result>> next)
+    {
+        ArgumentNullException.ThrowIfNull(next);
+        return IsSuccess ? await next(_value!).ConfigureAwait(false) : ToFailure();
+    }
+
+    /// <summary>Mantém o sucesso só se o valor atender à condição; caso contrário, falha com <paramref name="error"/>.</summary>
+    /// <param name="predicate">Condição sobre o valor.</param>
+    /// <param name="error">Erro quando a condição não é atendida.</param>
+    /// <returns>Este resultado, ou a falha com <paramref name="error"/>.</returns>
+    public Result<T> Ensure(Func<T, bool> predicate, Error error)
+    {
+        ArgumentNullException.ThrowIfNull(predicate);
+        ArgumentNullException.ThrowIfNull(error);
+        return IsFailure || predicate(_value!) ? this : Failure(error);
     }
 
     /// <summary>Executa uma das funções conforme o resultado.</summary>

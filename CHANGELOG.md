@@ -4,7 +4,19 @@ Todas as mudanças relevantes do **TEC.Core** são registradas aqui.
 O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o projeto usa [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 Enquanto a versão for `0.x`, mudanças incompatíveis podem ocorrer em versões MINOR.
 
-## [0.0.1] - não publicado
+## [0.1.0] - não publicado
+
+### ✨ Adicionado
+
+#### 🏛️ Domínio
+
+- `TEC.Core.Domain`: `DomainEntity<TId>` (igualdade por tipo concreto e `Id`; entidade transiente só é igual a si mesma), `AggregateRoot<TId>` (`RaiseDomainEvent`, `DomainEvents`, `ClearDomainEvents`, limite de 1000 eventos pendentes), `IDomainEvent` (`OccurredAt`) e `IHasDomainEvents`, para a persistência coletar os eventos no commit (Outbox do TEC.Messaging).
+
+#### 🧱 Common
+
+- Composição de `Result`: `Bind` e `BindAsync` (em `Result` e `Result<T>`), `Ensure` e `ResultTaskExtensions` (`BindAsync`/`MapAsync` sobre `Task<Result<T>>`). Param na primeira falha e preservam todos os erros.
+
+## [0.0.1] - 2026-10-08
 
 Primeira versão do pacote **TEC.Core**, a base dos componentes TEC.
 

@@ -58,7 +58,7 @@ A base de todos os componentes TEC · .NET 8 e 10 · Native AOT · sem dependên
 
 | Pacote | Para que serve | Quando instalar | Depende de |
 |---|---|---|---|
-| `TEC.Core` | `Result`/`Error`, respostas de API, exceções, criptografia, documentos, datas e dias úteis, números, CSV, enums, JSON e `ICurrentUser` | Em qualquer projeto que use um componente TEC ou precise desses utilitários | Só `Microsoft.Extensions.DependencyInjection.Abstractions` |
+| `TEC.Core` | `Result`/`Error`, primitivas de domínio (agregado, evento), respostas de API, exceções, criptografia, documentos, datas e dias úteis, números, CSV, enums, JSON e `ICurrentUser` | Em qualquer projeto que use um componente TEC ou precise desses utilitários | Só `Microsoft.Extensions.DependencyInjection.Abstractions` |
 
 O pacote traz `lib/net8.0` e `lib/net10.0`, a documentação XML (IntelliSense em português), este README e o logo; os símbolos (`.snupkg`) ficam anexados a cada Release.
 
@@ -219,7 +219,8 @@ await foreach (var row in csvReader.ReadFileAsync<OrderRow>(path)) { }   // CSV 
 | Arquivo | O que responde |
 |---|---|
 | [📥 Instalação](https://github.com/tudoemcodigo/lib-tec-core/blob/main/docs/instalacao.md) | Como configurar o feed, o `nuget.config`, o GitHub Actions e o Docker |
-| [🧱 Common](https://github.com/tudoemcodigo/lib-tec-core/blob/main/docs/common.md) | Como validar argumentos, retornar `Result`/`Error` e serializar JSON (inclusive AOT) |
+| [🧱 Common](https://github.com/tudoemcodigo/lib-tec-core/blob/main/docs/common.md) | Como validar argumentos, retornar e compor `Result`/`Error` (`Bind`, `Ensure`) e serializar JSON (inclusive AOT) |
+| [🏛️ Domínio](https://github.com/tudoemcodigo/lib-tec-core/blob/main/docs/dominio.md) | Como modelar agregados (`AggregateRoot<TId>`) e registrar eventos de domínio |
 | [🌐 Respostas de API](https://github.com/tudoemcodigo/lib-tec-core/blob/main/docs/respostas-api.md) | Como montar o envelope `ApiResponse` e paginar consultas |
 | [🚨 Exceções](https://github.com/tudoemcodigo/lib-tec-core/blob/main/docs/excecoes.md) | Qual exceção lançar, que status HTTP e código ela gera e o que vai ao cliente |
 | [🔤 Texto](https://github.com/tudoemcodigo/lib-tec-core/blob/main/docs/texto.md) | Como validar, formatar, gerar e mascarar documentos; extensões de texto; Base64Url |
