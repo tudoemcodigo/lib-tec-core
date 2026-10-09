@@ -18,7 +18,11 @@ public class SingleFlightTests
             return 42;
         }
 
-        var calls = Enumerable.Range(0, 100).Select(_ => Task.Run(() => flight.RunAsync("k", Operation))).ToArray();
+        // Todas as chamadas entram ANTES da liberação. Com Task.Run, num runner de 2 vCPUs parte das tarefas só chegava ao
+        // RunAsync depois que a operação terminou e iniciava, corretamente, uma segunda execução (teste instável, não bug).
+        // StartNew (sem Unwrap) conclui quando a chamada já se registrou no RunAsync e devolve a tarefa do resultado.
+        Task<int>[] calls = await Task.WhenAll(Enumerable.Range(0, 100).Select(_ =>
+            Task.Factory.StartNew(() => flight.RunAsync("k", Operation), CancellationToken.None, TaskCreationOptions.None, TaskScheduler.Default)));
         await WaitUntil(() => Volatile.Read(ref executions) == 1);
         release.SetResult();
 
