@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/samples/">
+    <Project Path="samples/TEC.Core.LoadGenerator/TEC.Core.LoadGenerator.csproj" />
+    <Project Path="samples/TEC.Core.SampleApi/TEC.Core.SampleApi.csproj" />
+  </Folder>
+  <Project Path="TEC.Core.Benchmarks/TEC.Core.Benchmarks.csproj" />
+  <Project Path="TEC.Core.LoadTests/TEC.Core.LoadTests.csproj" />
+  <Project Path="TEC.Core.Tests/TEC.Core.Tests.csproj" />
+  <Project Path="TEC.Core/TEC.Core.csproj" />
+</Solution>

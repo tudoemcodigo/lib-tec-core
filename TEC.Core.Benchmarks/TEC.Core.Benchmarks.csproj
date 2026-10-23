@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Micro-benchmarks (BenchmarkDotNet): tempo e alocação das operações mais usadas do TEC.Core.
+    Rodam sob demanda, sempre em Release (veja docs/testes.md): não fazem parte do dotnet test.
+    Framework, lock file e auditoria de pacotes em ../Directory.Build.props.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <!-- BenchmarkDotNet gera e compila um projeto por benchmark: símbolos completos e otimização obrigatórios -->
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TEC.Core\TEC.Core.csproj" />
+  </ItemGroup>
+
+</Project>
