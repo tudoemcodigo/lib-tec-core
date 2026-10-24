@@ -1,3 +1,5 @@
+[🏠 TEC.Core](../../README.md) › [📚 Documentação](../README.md) › [🏛️ ADRs](README.md) › ADR-0009
+
 # ADR-0009: Coalescência de Requisições Concorrentes Anti-Cache Stampede com SingleFlight
 
 - **Status:** Aceito
@@ -13,7 +15,7 @@ Quando dados armazenados em cache (Redis, memória, etc.) expiram sob alta carga
 
 ## 💡 Decisão
 
-Implementar a classe [`SingleFlight<TKey, TValue>`](file:///D:/Projetos/Componentes/TEC.Core/TEC.Core/Threading/SingleFlight.cs) no `TEC.Core.Threading`:
+Implementar a classe [`SingleFlight<TKey, TValue>`](../../TEC.Core/Threading/SingleFlight.cs) no `TEC.Core.Threading`:
 
 ### Diretrizes de Projeto:
 - **Uma Única Execução por Chave:** Para qualquer conjunto de chamadas simultâneas com a mesma chave, apenas a primeira chamada dispara a operação assíncrona. As demais recebem a mesma `Task` e aguardam em repouso o resultado.
@@ -35,3 +37,7 @@ Implementar a classe [`SingleFlight<TKey, TValue>`](file:///D:/Projetos/Componen
 
 ### Negativas / Trade-offs
 - A operação executada não deve ter efeitos colaterais mutáveis exclusivos por usuário (deve ser idempotente ou de leitura), já que o mesmo retorno será compartilhado entre todos os chamadores em voo.
+
+---
+
+⬅️ [Anterior: ADR-0008](0008-validacao-e-formatacao-de-documentos-e-cnpj-alfanumerico.md) · [🏛️ Índice dos ADRs](README.md) · [Próximo: ADR-0010](0010-mascaramento-de-dados-pessoais-lgpd-e-describe-untrusted.md) ➡️

@@ -1,3 +1,5 @@
+[🏠 TEC.Core](../../README.md) › [📚 Documentação](../README.md) › [🏛️ ADRs](README.md) › ADR-0002
+
 # ADR-0002: Envelope Padronizado de Respostas de API e Mascaramento de Erros Internos
 
 - **Status:** Aceito
@@ -15,7 +17,7 @@ A falta de um padrão único de resposta HTTP em serviços corporativos gera doi
 
 ## 💡 Decisão
 
-Adotar os registros [`ApiResponse`](file:///D:/Projetos/Componentes/TEC.Core/TEC.Core/Responses/ApiResponse.cs), [`ApiResponse<T>`](file:///D:/Projetos/Componentes/TEC.Core/TEC.Core/Responses/ApiResponse.cs#L184), [`PagedResponse<T>`](file:///D:/Projetos/Componentes/TEC.Core/TEC.Core/Responses/PagedResponse.cs) e [`ApiError`](file:///D:/Projetos/Componentes/TEC.Core/TEC.Core/Responses/ApiError.cs) como o envelope universal de resposta REST.
+Adotar os registros [`ApiResponse`](../../TEC.Core/Responses/ApiResponse.cs), [`ApiResponse<T>`](../../TEC.Core/Responses/ApiResponse.cs), [`PagedResponse<T>`](../../TEC.Core/Responses/PagedResponse.cs) e [`ApiError`](../../TEC.Core/Responses/ApiError.cs) como o envelope universal de resposta REST.
 
 ### Diretrizes de Projeto:
 - **Estrutura Previsível:** O envelope contém sempre `success`, `statusCode`, `message`, `data` (em `ApiResponse<T>`), `errors` (array de `ApiError`), `timestamp` (UTC) e `traceId` (opcional, para correlação).
@@ -32,3 +34,7 @@ Adotar os registros [`ApiResponse`](file:///D:/Projetos/Componentes/TEC.Core/TEC
 
 ### Negativas / Trade-offs
 - Respostas de sucesso com dados pagam o pequeno overhead de um envelope ao invés de retornar o JSON do modelo puro na raiz.
+
+---
+
+⬅️ [Anterior: ADR-0001](0001-result-pattern-e-tratamento-de-erros.md) · [🏛️ Índice dos ADRs](README.md) · [Próximo: ADR-0003](0003-primitivas-ddd-puras-e-eventos-de-dominio.md) ➡️

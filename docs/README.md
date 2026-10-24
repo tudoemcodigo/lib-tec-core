@@ -1,3 +1,7 @@
+<div align="center">
+<img src="https://www.tudoemcodigo.com/marca/PNG/tudoemcodigo-icone-512.png" alt="Tudo em Código" width="90" />
+</div>
+
 [🏠 TEC.Core](../README.md) › 📚 Documentação
 
 # 📚 Documentação do TEC.Core
@@ -34,8 +38,8 @@
 | 15 | [🛡️ Segurança](seguranca.md) | O que o componente garante, o que é sua responsabilidade; identidade da operação | `ICurrentUser`, `PrincipalKind` |
 | 16 | [🧪 Testes](testes.md) | Categorias, como rodar local e no CI, variáveis `TEC_CARGA_*`, carga e benchmarks | — |
 | 17 | [🛠️ Desenvolvimento](desenvolvimento.md) | Como compilar, testar mudanças nos dependentes com o modo local (`-p:TecUseLocalProjects=true`), lock files, contribuição e publicação | — |
-| 18 | [🔎 Revisão técnica](revisao-tecnica.md) | Achados da revisão de segurança, bugs, implementação, organização e docs (2026-10-19), com evidências e correções sugeridas | — |
-| 19 | [🏛️ Decisões de Arquitetura (ADRs)](adr/README.md) | Registros formais de decisões arquiteturais exclusivas do TEC.Core | ADR-0001 a ADR-0013 |
+| 18 | [🔎 Revisão técnica](revisao-tecnica.md) | Achados da revisão de segurança, bugs, implementação, organização e docs, com evidências, correções aplicadas e estado verificado em 2026-10-24 | — |
+| 19 | [🏛️ Decisões de arquitetura (ADRs)](adr/README.md) | Registros formais das decisões de arquitetura exclusivas do TEC.Core (ADR-0001 a ADR-0013) | ADR-0001 a ADR-0013 |
 
 Fora de `docs/`: [🧰 Samples](../samples/README.md) (API de exemplo e gerador de carga) · [⚙️ CI/CD](../.github/workflows/README.md) (workflows e publicação) · [📝 Changelog](../CHANGELOG.md).
 
@@ -60,10 +64,12 @@ flowchart LR
     CSV --> DI
     D --> DI
     DI --> CO["⚡ compatibilidade"]
-    CO --> S["🛡️ seguranca"]
+    CO --> CC["🔀 concorrencia"]
+    CC --> S["🛡️ seguranca"]
     S --> TS["🧪 testes"]
     TS --> DV["🛠️ desenvolvimento"]
     DV --> RT["🔎 revisao-tecnica"]
+    RT --> ADR["🏛️ adr"]
 ```
 
 As setas indicam dependência de leitura: `datas` usa o `csv` para fontes de feriados em arquivo; `csv` usa as regras de `enums`; `respostas-api` converte `Result` e exceções.
@@ -80,6 +86,8 @@ flowchart TD
     Q -->|"valores, moeda, extenso"| N["🔢 numeros"]
     Q -->|"vencimentos e feriados"| D["📅 datas"]
     Q -->|"importar ou exportar planilhas"| CSV["📄 csv"]
+    Q -->|"modelar agregados e eventos"| DO["🏛️ dominio"]
+    Q -->|"evitar execuções duplicadas (cache stampede)"| CC["🔀 concorrencia"]
     C --> DI["🧩 injecao-dependencia"]
     D --> DI
     CSV --> DI

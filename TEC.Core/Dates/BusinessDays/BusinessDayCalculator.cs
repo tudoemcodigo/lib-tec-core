@@ -1,3 +1,4 @@
+using System.Globalization;
 using TEC.Core.Common.Guards;
 using TEC.Core.Dates.Holidays;
 using TEC.Core.Dates.TimeZones;
@@ -212,21 +213,22 @@ public sealed class BusinessDayCalculator : IBusinessDayCalculator
             current = Step(current, step);
         }
 
-        throw new InvalidOperationException($"Nenhum dia útil encontrado em {MaxSearchDays} dias a partir de {start:dd/MM/yyyy}. Verifique o cadastro de feriados.");
+        throw new InvalidOperationException($"Nenhum dia útil encontrado em {MaxSearchDays} dias a partir de {start.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture)}. Verifique o cadastro de feriados.");
     }
 
-    // DateTime em UTC representa um instante: o dia útil é avaliado na data de Brasília (23:00 UTC de sexta ainda é sexta
-    // em Brasília, mas 02:00 UTC de sábado é sexta 23:00 em Brasília). Local/Unspecified usam a própria data do calendário.
+    // Instantes (Utc e Local) são avaliados na data de Brasília (23:00 UTC de sexta ainda é sexta
+    // em Brasília, mas 02:00 UTC de sábado é sexta 23:00 em Brasília). DateTimeKind.Unspecified usa a própria data de calendário.
     private static DateOnly ToCalendarDate(DateTime date) =>
-        DateOnly.FromDateTime(date.Kind == DateTimeKind.Utc ? date.ToBrasiliaTime() : date);
+        DateOnly.FromDateTime(date.Kind is DateTimeKind.Utc or DateTimeKind.Local ? date.ToBrasiliaTime() : date);
 
-    // Mantém o horário de parede: em UTC, o horário de Brasília é preservado e o resultado volta para UTC
+    // Mantém o horário de parede: em UTC/Local, o horário de Brasília é preservado e o resultado volta para o Kind original
     private static DateTime WithTime(DateOnly date, DateTime original)
     {
-        if (original.Kind != DateTimeKind.Utc)
-            return date.ToDateTime(TimeOnly.FromDateTime(original), original.Kind);
+        if (original.Kind == DateTimeKind.Unspecified)
+            return date.ToDateTime(TimeOnly.FromDateTime(original), DateTimeKind.Unspecified);
 
         var brasiliaTime = date.ToDateTime(TimeOnly.FromDateTime(original.ToBrasiliaTime()), DateTimeKind.Unspecified);
-        return brasiliaTime.FromBrasiliaTimeToUtc();
+        var utc = brasiliaTime.FromBrasiliaTimeToUtc();
+        return original.Kind == DateTimeKind.Utc ? utc : utc.ToLocalTime();
     }
 }

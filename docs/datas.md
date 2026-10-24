@@ -278,7 +278,7 @@ Cálculo de dias úteis considerando fins de semana e feriados. Sem estado mutá
 
 - `nonWorkingDays`: padrão **sábado e domingo**. Pelo menos um dia da semana precisa ser útil. A lista é copiada e validada no construtor.
 - Os métodos que recebem uma data (exceto `GetBusinessDays`) têm sobrecarga com `DateTime`, que **preserva o horário e o `DateTimeKind`**.
-- `DateTime` com `Kind = Utc` representa um instante e é avaliado na **data de Brasília**: sábado 02:00 UTC é sexta-feira 23:00 em Brasília, portanto dia útil. O resultado preserva o horário de Brasília e volta em UTC (ex.: `NextBusinessDay` de segunda 02/11/2026 01:00 UTC, que é domingo 22:00 em Brasília, retorna 04/11/2026 01:00 UTC, isto é, terça 22:00 em Brasília). `Local` e `Unspecified` usam a data como está.
+- `DateTime` com `Kind = Utc` ou `Local` representa um instante e é avaliado na **data de Brasília**. O resultado preserva o horário de parede de Brasília e volta no `Kind` original. `Unspecified` usa a data e hora como calendário local, sem conversão.
 
 | Membro | Retorno | Descrição |
 |---|---|---|
@@ -1048,4 +1048,4 @@ Registre um callback com `OnSourceError` (log) e consulte `HolidayCalendar.Failu
 
 ---
 
-⬅️ [Anterior](numeros.md) · [📚 Índice](README.md) · [Próximo](criptografia.md) ➡️
+⬅️ [Anterior: Números](numeros.md) · [📚 Índice](README.md) · [Próximo: Criptografia](criptografia.md) ➡️

@@ -223,4 +223,4 @@ Sim. A cultura usada é `BrazilianCulture.Instance`, que monta uma pt-BR equival
 </details>
 
 ---
-⬅️ [Texto](texto.md) · [📚 Índice](README.md) · [Datas](datas.md) ➡️
+⬅️ [Anterior: Texto](texto.md) · [📚 Índice](README.md) · [Próximo: Datas e dias úteis](datas.md) ➡️

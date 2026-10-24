@@ -1,3 +1,5 @@
+[🏠 TEC.Core](../../README.md) › [📚 Documentação](../README.md) › [🏛️ ADRs](README.md) › ADR-0007
+
 # ADR-0007: Cálculo de Dias Úteis, Feriados Nacionais Móveis e Tratamento de Fuso Horário de Brasília
 
 - **Status:** Aceito
@@ -20,18 +22,18 @@ Aplicações corporativas e financeiras no Brasil enfrentam desafios singulares 
 
 Criar um motor completo e desacoplado de cálculo de datas brasileiras:
 
-### 1. Feriados Nacionais Calculados ([`BrazilianNationalHolidays`](file:///D:/Projetos/Componentes/TEC.Core/TEC.Core/Dates/Holidays/BrazilianNationalHolidays.cs))
+### 1. Feriados Nacionais Calculados ([`BrazilianNationalHolidays`](../../TEC.Core/Dates/Holidays/BrazilianNationalHolidays.cs))
 - **Sem Banco nem Arquivo:** Calcula datas fixas e móveis em memória para qualquer ano gregoriano.
 - **Algoritmo de Meeus/Jones/Butcher:** Cálculo exato da Páscoa e dedução automática dos dias móveis (Carnaval: Páscoa -48 e -47; Paixão de Cristo: Páscoa -2; Corpus Christi: Páscoa +60).
 - **Vigência Histórica:** Incorporação de 12/10 apenas a partir de 1980 e de 20/11 apenas a partir de 2024.
 - **Cache Thread-Safe:** Cache estático (`ConcurrentDictionary`) para anos entre 1900 e 2200 para acesso em $O(1)$.
 
-### 2. Calculadora de Dias Úteis ([`BusinessDayCalculator`](file:///D:/Projetos/Componentes/TEC.Core/TEC.Core/Dates/BusinessDays/BusinessDayCalculator.cs))
+### 2. Calculadora de Dias Úteis ([`BusinessDayCalculator`](../../TEC.Core/Dates/BusinessDays/BusinessDayCalculator.cs))
 - Cálculo bidirecional de dias úteis (`AddBusinessDays`, `NextBusinessDay`, `PreviousBusinessDay`, `NextOrSameBusinessDay`).
 - Regra D+0: `AddBusinessDays(data, 0)` retorna o próprio dia se útil ou prorroga para o próximo dia útil.
 - **Proteção Contra Loops Infinitos:** Limite estrito `MaxSearchDays = 3660` (~10 anos) e `MaxBusinessDaysToAdd = 26000` (~100 anos), impedindo que configurações inválidas travem a thread em `while(true)`.
 
-### 3. Fuso Horário de Brasília sem `tzdata` ([`BrazilTimeZone`](file:///D:/Projetos/Componentes/TEC.Core/TEC.Core/Dates/TimeZones/BrazilTimeZone.cs))
+### 3. Fuso Horário de Brasília sem `tzdata` ([`BrazilTimeZone`](../../TEC.Core/Dates/TimeZones/BrazilTimeZone.cs))
 - Detecção inteligente do fuso `America/Sao_Paulo` (Linux/macOS) ou `E. South America Standard Time` (Windows).
 - **Fallback Automático:** Caso o sistema operacional não possua base de fusos (container sem `tzdata`), o componente inicializa automaticamente com `UTC-03:00` fixo (o Brasil não possui horário de verão desde o Decreto nº 9.772/2019).
 - **Prevenção de Erro de Conversão Dupla:** `ToBrasiliaTime` recusa valores com `DateTimeKind.Unspecified` sem declaração explícita de interpretação, evitando subtrair 3 horas acidentalmente de valores que já estavam no horário de Brasília.
@@ -45,4 +47,8 @@ Criar um motor completo e desacoplado de cálculo de datas brasileiras:
 - **Testabilidade Total:** Eliminação do acoplamento a `DateTime.Now` mediante o uso de `TimeProvider`.
 
 ### Negativas / Trade-offs
-- Para calendários municipais e estaduais específicos, é necessário alimentar o [`HolidayCalendar`](file:///D:/Projetos/Componentes/TEC.Core/TEC.Core/Dates/Holidays/HolidayCalendar.cs) via fontes externas (CSV, JSON, Banco ou BrasilAPI).
+- Para calendários municipais e estaduais específicos, é necessário alimentar o [`HolidayCalendar`](../../TEC.Core/Dates/Holidays/HolidayCalendar.cs) via fontes externas (CSV, JSON, Banco ou BrasilAPI).
+
+---
+
+⬅️ [Anterior: ADR-0006](0006-motor-de-csv-streaming-com-anti-formula-injection.md) · [🏛️ Índice dos ADRs](README.md) · [Próximo: ADR-0008](0008-validacao-e-formatacao-de-documentos-e-cnpj-alfanumerico.md) ➡️

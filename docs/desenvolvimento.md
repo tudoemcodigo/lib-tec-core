@@ -25,7 +25,7 @@
 
 | Item | Valor |
 |---|---|
-| SDK | `global.json`: `10.0.100` ou superior (`rollForward: latestFeature`), com o Microsoft.Testing.Platform |
+| SDK | `global.json`: `10.0.401` (`rollForward: latestPatch`), com o Microsoft.Testing.Platform |
 | Runtimes extras | .NET 8 e ASP.NET Core 8 (testes no alvo `net8.0`) |
 | Solução | `TEC.Core.slnx` |
 | Versão | Única, em `Directory.Build.props` (`<Version>0.0.1</Version>`); nunca no csproj |
@@ -121,8 +121,8 @@ TEC.Core/
 ├── docs/                   índice + um arquivo por tema
 ├── Images/Logo.png         ícone do pacote ⟵ canônico
 ├── samples/                TEC.Core.SampleApi e TEC.Core.LoadGenerator (nunca pacote)
-├── TEC.Core/               o pacote (Common, Cryptography, Csv, Dates, DependencyInjection, Enums,
-│                           Exceptions, Numbers, Polyfills, Responses, Security, Text)
+├── TEC.Core/               o pacote (Common, Cryptography, Csv, Dates, DependencyInjection, Domain, Enums,
+│                           Exceptions, IO, Numbers, Polyfills, Responses, Security, Text, Threading)
 ├── TEC.Core.Tests/         unitários e segurança (TUnit + FsCheck)
 ├── TEC.Core.LoadTests/     Carga-CI e Carga-Pesada
 ├── TEC.Core.Benchmarks/    BenchmarkDotNet

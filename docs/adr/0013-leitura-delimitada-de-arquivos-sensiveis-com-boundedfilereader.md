@@ -1,3 +1,5 @@
+[🏠 TEC.Core](../../README.md) › [📚 Documentação](../README.md) › [🏛️ ADRs](README.md) › ADR-0013
+
 # ADR-0013: Leitura Delimitada de Arquivos de Segredos e Configuração com Zeragem de Buffer
 
 - **Status:** Aceito
@@ -18,7 +20,7 @@ As abordagens convencionais de leitura de arquivos em C# (`File.ReadAllText`) ap
 
 ## 💡 Decisão
 
-Criar o utilitário estático [`BoundedFileReader`](file:///D:/Projetos/Componentes/TEC.Core/TEC.Core/IO/BoundedFileReader.cs) no namespace `TEC.Core.IO`:
+Criar o utilitário estático [`BoundedFileReader`](../../TEC.Core/IO/BoundedFileReader.cs) no namespace `TEC.Core.IO`:
 
 ### Diretrizes de Projeto:
 - **Teto Rígido de Memória:**
@@ -43,3 +45,7 @@ Criar o utilitário estático [`BoundedFileReader`](file:///D:/Projetos/Componen
 
 ### Negativas / Trade-offs
 - Não é adequado para arquivos de texto massivos (acima de centenas de megabytes), para os quais streaming puro via `StreamReader` linha a linha é o padrão recomendado.
+
+---
+
+⬅️ [Anterior: ADR-0012](0012-serializacao-json-estrita-imutavel-e-compativel-com-aot.md) · [🏛️ Índice dos ADRs](README.md)

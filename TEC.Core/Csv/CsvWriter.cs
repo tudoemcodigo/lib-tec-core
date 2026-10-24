@@ -139,7 +139,8 @@ public sealed class CsvWriter : ICsvWriter
         bool mustQuote = _options.QuoteAllFields
             || value.Contains(_options.Delimiter)
             || value.AsSpan().IndexOfAny('"', '\r', '\n') >= 0
-            || (value.Length > 0 && (char.IsWhiteSpace(value[0]) || char.IsWhiteSpace(value[^1])));
+            || (value.Length > 0 && (char.IsWhiteSpace(value[0]) || char.IsWhiteSpace(value[^1])))
+            || (_options.SanitizeFormulas && value.AsSpan().IndexOfAny(",;\t|") >= 0 && value.AsSpan().IndexOfAny("=+-@\t\r＝＋－＠") >= 0);
 
         if (!mustQuote)
         {

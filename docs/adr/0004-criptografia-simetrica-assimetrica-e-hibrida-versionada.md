@@ -1,3 +1,5 @@
+[🏠 TEC.Core](../../README.md) › [📚 Documentação](../README.md) › [🏛️ ADRs](README.md) › ADR-0004
+
 # ADR-0004: Arquitetura Criptográfica Versionada (AES-GCM, RSA e Híbrida) com ZeroMemory
 
 - **Status:** Aceito
@@ -20,21 +22,21 @@ Aplicações corporativas necessitam de criptografia robusta para repouso e trâ
 
 Implementar componentes nativos de criptografia de padrão militar com autenticação de integridade (AEAD) e garantia de versionamento:
 
-### 1. Criptografia Simétrica ([`AesGcmCryptography`](file:///D:/Projetos/Componentes/TEC.Core/TEC.Core/Cryptography/Symmetric/AesGcmCryptography.cs))
+### 1. Criptografia Simétrica ([`AesGcmCryptography`](../../TEC.Core/Cryptography/Symmetric/AesGcmCryptography.cs))
 - **Em Memória:** Formato `[versão 1 byte = 0x01][nonce 12 bytes][tag 16 bytes][dados cifrados]`. O byte de versão entra nos dados associados autenticados (AAD), impedindo adulterações externas no cabeçalho.
-- **Em Streaming e Arquivos:** Divisão em blocos de 64 KB com derivação de subchave exclusiva por arquivo via **HKDF-SHA256** com salt de 32 bytes e contexto `TEC.Core.AesGcm.Stream.v1`. Cada bloco possui flag de bloco final, tamanho e contador sequencial no AAD, tornando matematicamente impossível reordenar, truncar ou injetar blocos adicionais.
+- **Em Streaming e Arquivos:** Divisão em blocos de 64 KB com derivação de subchave exclusiva por arquivo via **HKDF-SHA256** com salt de 32 bytes e contexto `TEC.Core.AesGcm.Stream.v1`. O cabeçalho do stream e a flag de bloco final entram no AAD de cada bloco, e o nonce de cada bloco é o seu contador sequencial (seguro porque a subchave é única por stream), o que impede reordenar, truncar ou acrescentar blocos sem que a decifragem falhe.
 - **Operações Atômicas de Arquivos:** Métodos dedicados `EncryptFileAsync`, `DecryptFileAsync`, `EncryptToFileAsync` e `DecryptFromFileAsync` com chave binária ou Base64, gravando em arquivo temporário `.tmp` e substituindo o destino de forma atômica no encerramento, garantindo que falhas parciais nunca deixem arquivos truncados ou corrompidos.
 
-### 2. Criptografia Assimétrica ([`RsaCryptography`](file:///D:/Projetos/Componentes/TEC.Core/TEC.Core/Cryptography/Asymmetric/RsaCryptography.cs))
+### 2. Criptografia Assimétrica ([`RsaCryptography`](../../TEC.Core/Cryptography/Asymmetric/RsaCryptography.cs))
 - Cifragem exclusivamente com **RSA-OAEP-SHA256**.
 - Assinatura com **SHA-256 + PSS** (padrão) e suporte a PKCS#1 v1.5 para compatibilidade com legados.
 - Piso mínimo de segurança de 2048 bits para geração e teto de importação de 16384 bits para mitigar ataques de negação de serviço (DoS) por processamento exponencial de módulos criptográficos.
-- Introdução de [`RsaKey`](file:///D:/Projetos/Componentes/TEC.Core/TEC.Core/Cryptography/Asymmetric/RsaKey.cs) para importação única de chaves PEM em caminhos de alta performance.
+- Introdução de [`RsaKey`](../../TEC.Core/Cryptography/Asymmetric/RsaKey.cs) para importação única de chaves PEM em caminhos de alta performance.
 
-### 3. Criptografia Híbrida ([`HybridCryptography`](file:///D:/Projetos/Componentes/TEC.Core/TEC.Core/Cryptography/Hybrid/HybridCryptography.cs))
+### 3. Criptografia Híbrida ([`HybridCryptography`](../../TEC.Core/Cryptography/Hybrid/HybridCryptography.cs))
 - Combina RSA (para troca segura da chave simétrica aleatória efêmera de 256 bits) com AES-GCM (para cifrar o payload sem restrição de tamanho).
 - O cabeçalho completo com o prefixo da chave cifrada é autenticado no AAD do AES-GCM.
-- Suporte nativo a [`RsaKey`](file:///D:/Projetos/Componentes/TEC.Core/TEC.Core/Cryptography/Asymmetric/RsaKey.cs) em todas as sobrecargas de memória, texto Base64 e arquivos (`EncryptFileAsync`, `DecryptFileAsync`, `EncryptToFileAsync`, `DecryptFromFileAsync`), viabilizando alta vazão de arquivos híbridos sem reinterpretar PEMs a cada operação.
+- Suporte nativo a [`RsaKey`](../../TEC.Core/Cryptography/Asymmetric/RsaKey.cs) em todas as sobrecargas de memória, texto Base64 e arquivos (`EncryptFileAsync`, `DecryptFileAsync`, `EncryptToFileAsync`, `DecryptFromFileAsync`), viabilizando alta vazão de arquivos híbridos sem reinterpretar PEMs a cada operação.
 
 ### 4. Higienização de Memória (*ZeroMemory*)
 - Todos os buffers temporários de texto plano, chaves decodificadas e senhas intermediárias são sistematicamente zerados em blocos `finally` via [`CryptographicOperations.ZeroMemory`](https://learn.microsoft.com/dotnet/api/system.security.cryptography.cryptographicoperations.zeromemory).
@@ -48,3 +50,7 @@ Implementar componentes nativos de criptografia de padrão militar com autentica
 
 ### Negativas / Trade-offs
 - O tamanho dos dados cifrados é acrescido dos bytes de cabeçalho, nonce e tag de autenticação.
+
+---
+
+⬅️ [Anterior: ADR-0003](0003-primitivas-ddd-puras-e-eventos-de-dominio.md) · [🏛️ Índice dos ADRs](README.md) · [Próximo: ADR-0005](0005-hashing-e-verificacao-de-senhas-com-pbkdf2.md) ➡️

@@ -25,7 +25,7 @@
   - [R13 a R15 · Informativos](#r13-a-r15--informativos)
 - [💡 Melhorias sugeridas](#-melhorias-sugeridas)
 - [📝 Ajustes na documentação](#-ajustes-na-documentação)
-- [✅ Correções aplicadas — 2026-10-19](#-correções-aplicadas--2026-10-19)
+- [✅ Correções aplicadas — 2026-10-24](#-correções-aplicadas--2026-10-24)
 
 ---
 
@@ -33,8 +33,8 @@
 
 | Item | Valor |
 |---|---|
-| Data | 2026-10-19 |
-| Commit analisado | `3b4c627 CHANGELOG: 0.1.0 publicada em 2026-10-09 (#5)` (árvore de trabalho com `.gitignore` alterado e `.omc/` não versionado, sem mudanças no código) |
+| Data | 2026-10-24 |
+| Estado analisado | Árvore de trabalho do TEC.Core em preparação para a versão `0.0.1`; alterações locais incluídas na revisão |
 | Código revisado | `TEC.Core/` inteiro (Result/Guard, domínio, respostas e paginação, exceções, documentos, mascaramento, datas/feriados/fuso, criptografia, CSV, `BoundedFileReader`, `SingleFlight`, DI, serialização), `build/`, `Directory.*.props`, workflows e o `dotnet-ci.yml` do `tec-workflows` |
 | Também consultados | Testes (`TEC.Core.Tests`), samples e os docs em `docs/` |
 | Método | Leitura do código, verificação de cada trecho antes do registro, e um programa de prova (fora do repositório, referenciando o `TEC.Core.dll` de Release) para reproduzir R01, R02, R03, R04, R08 e R09 |
@@ -47,9 +47,10 @@ Severidades: **Crítica** (exploração direta ou perda de dados grave), **Alta*
 
 | Comando | Resultado |
 |---|---|
-| `dotnet build TEC.Core.slnx -c Release` (SDK 10.0.401) | ✅ Compilação com êxito, **0 avisos, 0 erros** (pacote com `TreatWarningsAsErrors`, analisadores de segurança e AOT) |
-| `dotnet test --project TEC.Core.Tests -c Release` | ✅ **1122 testes aprovados**, 0 falhas, 0 ignorados, em `net8.0` e `net10.0` (cerca de 7 s) |
-| Testes de carga e integração | Não executados (fora do escopo pedido) |
+| `dotnet build TEC.Core.slnx -c Release` (SDK 10.0.402) | ✅ Compilação com êxito, **0 avisos, 0 erros** (pacote com `TreatWarningsAsErrors`, analisadores de segurança e AOT) |
+| `dotnet test --project TEC.Core.Tests -c Release` | ✅ **1198 testes aprovados**, 0 falhas, 0 ignorados, em `net8.0` e `net10.0` |
+| `dotnet test TEC.Core.slnx -c Release` | ✅ **1216 testes aprovados**, incluindo `Carga-CI` nos dois alvos; 0 falhas e 0 ignorados |
+| Testes de carga pesada e integração | Carga pesada não executada; o TEC.Core não possui testes de integração com recursos externos |
 
 A suíte é extensa (fuzzing com FsCheck, DoS, vazamento, tempo constante) e passa. Os achados abaixo são casos que ela não cobre.
 
@@ -499,7 +500,7 @@ Corrigidos diretamente nesta revisão (o documento dizia X, o código faz Y):
 | [README.md](README.md) | — | Linha 18 na tabela de temas e nó no mapa |
 | [desenvolvimento.md](desenvolvimento.md) | Rodapé terminava no índice | Link para esta revisão |
 
-Pendentes na revisão, **feitos junto com as correções** (2026-10-19), já descrevendo o comportamento novo:
+Pendentes na revisão, **feitos junto com as correções** (2026-10-24), já descrevendo o comportamento novo:
 
 - ✅ [csv.md](csv.md): tabela de tipos com a leitura de `DateTime` com `Z`/offset em UTC, a escrita `O` de `DateTimeOffset`/`DateTime` UTC, o padrão `G` (sem frações) de `Local`/`Unspecified` e a recomendação de `Format = "O"` (R02).
 - ✅ [csv.md](csv.md): seção "Arquivos do Excel em ANSI (Windows-1252)" com `CodePagesEncodingProvider`, leitura UTF-8 estrita e a nova linha de erro (R03); `WriteFileAsync` com arquivo temporário (R12).
@@ -509,9 +510,9 @@ Pendentes na revisão, **feitos junto com as correções** (2026-10-19), já des
 
 ---
 
-## ✅ Correções aplicadas — 2026-10-19
+## ✅ Correções aplicadas — 2026-10-24
 
-Branch `fix/revisao-tecnica-2026-10-19` (a partir de `3b4c627`), sem commit. Versão do pacote: **0.1.0 → 0.2.0** (MINOR: em `0.x`, R02, R03, R04 e R11 mudam comportamento; detalhes no [CHANGELOG](../CHANGELOG.md)).
+Estado atual: versão inicial `0.0.1`, ainda não publicada. Esta revisão descreve o código e a documentação presentes nesta preparação, sem assumir versões ou branches anteriores.
 
 | Resultado | Quantidade |
 |---|:-:|
@@ -524,9 +525,10 @@ Cada correção veio com teste de regressão escrito antes; com o código-fonte 
 | Comando | Resultado |
 |---|---|
 | `dotnet restore TEC.Core.slnx --force-evaluate` | ✅ Lock files dos 6 projetos atualizados (só nuget.org; nada do `tec-interno` foi necessário) |
-| `dotnet build TEC.Core.slnx -c Release --no-incremental` (SDK 10.0.401) | ✅ **0 avisos, 0 erros** |
-| `dotnet test --project TEC.Core.Tests -c Release` | ✅ **1172 testes aprovados** (586 por TFM, +25 por TFM), 0 falhas, 0 ignorados, em `net8.0` (runtime 8.0.31) e `net10.0` (10.0.12); repetido 3 vezes, sem instabilidade |
-| Testes de carga, `[Explicit]` e samples em execução | Não executados. O ASP.NET Core 8 não está instalado nesta máquina (só o 10.0.12), então o `TEC.Core.SampleApi` no `net8.0` só foi compilado |
+| `dotnet build TEC.Core.slnx -c Release --no-incremental` (SDK 10.0.402) | ✅ **0 avisos, 0 erros** |
+| `dotnet test --project TEC.Core.Tests -c Release` | ✅ **1198 testes aprovados** (599 por TFM), 0 falhas e 0 ignorados |
+| `dotnet test TEC.Core.slnx -c Release` | ✅ **1216 testes aprovados**; inclui carga rápida `Carga-CI` em `net8.0` e `net10.0` |
+| Build da solução Release | ✅ Todos os projetos, samples e benchmarks compilados; **0 avisos e 0 erros** |
 
 Arquivos de código alterados: `Threading/SingleFlight.cs`; `Csv/CsvReader.cs`, `Csv/CsvWriter.cs`, `Csv/CsvOptions.cs`, `Csv/Abstractions/ICsvWriter.cs`, `Csv/Internal/CsvValueConverter.cs`, `Csv/Internal/CsvRecordParser.cs`; `Dates/Holidays/Sources/CsvHolidaySource.cs`; `Dates/Formatting/DateFormatter.cs`; `Cryptography/Hashing/Pbkdf2PasswordHasher.cs`, `Cryptography/Hashing/HashHelper.cs`, `Cryptography/Generators/SecureRandomGenerator.cs`; `Cryptography/Asymmetric/RsaCryptography.cs` e `RsaKey.cs` (novo); `IO/BoundedFileReader.cs`; `Directory.Packages.props`, `Directory.Build.props` e os `packages.lock.json`.
 
@@ -539,4 +541,4 @@ Decisões a revisar:
 
 ---
 
-⬅️ [Anterior: Desenvolvimento](desenvolvimento.md) · [📚 Índice](README.md)
+⬅️ [Anterior: Desenvolvimento](desenvolvimento.md) · [📚 Índice](README.md) · [Próximo: Decisões de arquitetura (ADRs)](adr/README.md) ➡️

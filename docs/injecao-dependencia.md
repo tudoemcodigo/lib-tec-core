@@ -96,7 +96,7 @@ var iterations = builder.Configuration.GetValue("Seguranca:IteracoesSenha", Pbkd
 builder.Services.AddTecCore(options =>
 {
     options.Csv = new CsvOptions { Delimiter = delimiter };
-    options.PasswordHashIterations = iterations;   // fora de 100.000 a 10.000.000 → falha aqui, na subida
+    options.PasswordHashIterations = iterations;   // fora de 100.000 a 2.000.000 → falha aqui, na subida
 });
 ```
 
@@ -107,7 +107,7 @@ builder.Services.AddTecCore(options =>
 | Propriedade | Tipo | Padrão | Descrição |
 |---|---|---|---|
 | `Csv` | `CsvOptions` | `CsvOptions.Default` | Opções do `ICsvReader`/`ICsvWriter` registrados (veja [csv.md](csv.md#csvoptions)) |
-| `PasswordHashIterations` | `int` | `Pbkdf2PasswordHasher.DefaultIterations` (600.000) | Iterações do PBKDF2; de 100.000 a 10.000.000 |
+| `PasswordHashIterations` | `int` | `Pbkdf2PasswordHasher.DefaultIterations` (600.000) | Iterações do PBKDF2; de 100.000 a 2.000.000 |
 | `RsaSignatureMode` | `RsaSignatureMode` | `Pss` | Esquema de assinatura do `RsaCryptography`; `Pkcs1` só para sistemas legados |
 
 ### AddBusinessDayCalculator
@@ -228,7 +228,7 @@ builder.Services.AddTecCore();   // não sobrescreve o IPasswordHasher acima
 | Opção | Onde | Padrão | Descrição |
 |---|---|---|---|
 | `TecCoreOptions.Csv` | `AddTecCore` | `CsvOptions.Default` | Opções de CSV dos serviços registrados |
-| `TecCoreOptions.PasswordHashIterations` | `AddTecCore` | `600_000` | Iterações do PBKDF2 (100.000 a 10.000.000) |
+| `TecCoreOptions.PasswordHashIterations` | `AddTecCore` | `600_000` | Iterações do PBKDF2 (100.000 a 2.000.000) |
 | `TecCoreOptions.RsaSignatureMode` | `AddTecCore` | `RsaSignatureMode.Pss` | Esquema de assinatura RSA |
 | `calendar` | `AddBusinessDayCalculator` | — | Calendário carregado por `HolidayCalendar.CreateBuilder()...BuildAsync()` |
 | `defaultLocation` | `AddBusinessDayCalculator` | `HolidayLocation.National` | Localidade de `IHolidayProvider`/`IBusinessDayCalculator` |
@@ -242,7 +242,7 @@ builder.Services.AddTecCore();   // não sobrescreve o IPasswordHasher acima
 | Exceção | Quando ocorre | O que fazer |
 |---|---|---|
 | `ArgumentNullException` | `services`, `calendar` ou `holidayProvider` nulo; `TecCoreOptions.Csv` nulo (`ParamName = "Csv"`) | Informe os argumentos; não atribua `null` a `Csv` |
-| `ArgumentOutOfRangeException` | `PasswordHashIterations` fora de 100.000 a 10.000.000 (*O valor deve estar entre 100000 e 10000000.*, `ParamName = "iterations"`); `RsaSignatureMode` fora do enum | Corrija a configuração; a falha acontece na subida |
+| `ArgumentOutOfRangeException` | `PasswordHashIterations` fora de 100.000 a 2.000.000 (*O valor deve estar entre 100000 e 2000000.*, `ParamName = "iterations"`); `RsaSignatureMode` fora do enum | Corrija a configuração; a falha acontece na subida |
 | `InvalidOperationException` | `IHolidayProvider`, `IBusinessDayCalculator`, `IBusinessDayCalculatorFactory` ou `HolidayCalendar` já registrados | Chame `AddBusinessDayCalculator` **uma única vez**; combine as fontes no mesmo `HolidayCalendar.CreateBuilder()` |
 | `ArgumentException` | `nonWorkingDays` com os 7 dias (*Ao menos um dia da semana deve ser útil.*) ou valor fora de `DayOfWeek` (*Dia da semana inválido.*) | Deixe ao menos um dia útil |
 | `HolidaySourceException` | Fonte obrigatória falhou no `BuildAsync` (antes do registro) | Veja [datas.md](datas.md#feriados); marque a fonte como `optional: true` se ela puder faltar |

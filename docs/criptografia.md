@@ -524,17 +524,17 @@ Hash de senhas com **PBKDF2-SHA256**, nativo do .NET, com salt aleatório de 16 
 |---|---|---|
 | `const DefaultIterations = 600_000` | `int` | Recomendação da OWASP para PBKDF2-SHA256. |
 | `const MaxPasswordLength = 1024` | `int` | Tamanho máximo de senha aceito (caracteres). |
-| `Pbkdf2PasswordHasher(int iterations = DefaultIterations)` | — | Aceita de 100.000 a 10.000.000 iterações. |
+| `Pbkdf2PasswordHasher(int iterations = DefaultIterations)` | — | Aceita de 100.000 a 2.000.000 iterações. |
 | `Hash(string password)` | `string` | Gera o hash com salt aleatório de 16 bytes. |
 | `Verify(string password, string? hashedPassword)` | `bool` | Verifica em tempo constante. Hash `null` (usuário inexistente) ou malformado → executa uma **derivação fictícia** com as iterações da instância e retorna `false` (sem exceção), para que o tempo de resposta não revele quais usuários existem. Hash válido com menos iterações que as da instância (ainda não refeito por `NeedsRehash`) também custa as iterações da instância: a diferença é completada com derivação fictícia. Senha vazia ou acima de `MaxPasswordLength` → `false`. |
-| `NeedsRehash(string hashedPassword)` | `bool` | `true` se o hash é inválido, usa menos iterações que as da instância ou tem menos de 32 bytes. |
+| `NeedsRehash(string hashedPassword)` | `bool` | `true` se o hash é inválido, usa quantidade de iterações diferente da instância ou tem tamanho diferente de 32 bytes. |
 
 ```text
 PBKDF2-SHA256$600000$DwAbB/sXcpdsqzdJ5rU9jg==$gzWSoMtlYusmPYMR2G5nOlk4PAoJf2YZke3tt9m8tFg=
 └── algoritmo ┘└ iter ┘└──── salt (Base64) ───┘└──────────── hash (Base64) ─────────────────┘
 ```
 
-Os parâmetros ficam gravados junto do hash: é possível **aumentar as iterações no futuro sem invalidar senhas antigas** (`NeedsRehash` + novo `Hash` no próximo login). Na leitura, o hash armazenado é validado: até 256 caracteres, 4 partes, prefixo `PBKDF2-SHA256`, iterações entre 100.000 e 10.000.000, salt e hash entre 16 e 64 bytes.
+Os parâmetros ficam gravados junto do hash: é possível ajustar as iterações sem invalidar imediatamente senhas existentes (`NeedsRehash` + novo `Hash` no próximo login). Para limitar trabalho controlado por hashes armazenados, a leitura aceita de 100.000 a 2.000.000 iterações; o formato também valida até 256 caracteres, 4 partes, prefixo `PBKDF2-SHA256`, salt entre 16 e 64 bytes e hash de até 64 bytes. O tamanho esperado para a configuração atual é 32 bytes.
 
 ```csharp
 using TEC.Core.Cryptography.Hashing;
@@ -620,9 +620,9 @@ Injete as interfaces em vez das classes concretas (facilita testes e troca de im
 
 | Interface | Implementação padrão | Membros |
 |---|---|---|
-| `ISymmetricCryptography` | [`AesGcmCryptography`](#aesgcmcryptography) | `GenerateKey()`, `GenerateKeyBase64()`, `Encrypt`/`Decrypt` (bytes com `associatedData` opcional; texto com chave Base64), `EncryptAsync`/`DecryptAsync` (streams) |
+| `ISymmetricCryptography` | [`AesGcmCryptography`](#aesgcmcryptography) | `GenerateKey()`, `GenerateKeyBase64()`, `Encrypt`/`Decrypt` (bytes com `associatedData` opcional; texto com chave Base64), `EncryptAsync`/`DecryptAsync` (streams), `EncryptFileAsync`/`DecryptFileAsync`/`EncryptToFileAsync`/`DecryptFromFileAsync` (arquivos, chave em bytes ou Base64) |
 | `IAsymmetricCryptography` | [`RsaCryptography`](#rsacryptography) | `GenerateKeyPair(int keySizeInBits = 2048)`, `Encrypt`/`Decrypt` (bytes e texto Base64), `SignData`/`VerifyData` (bytes e texto Base64) |
-| `IHybridCryptography` | [`HybridCryptography`](#hybridcryptography) | `Encrypt`/`Decrypt` (bytes e texto Base64) |
+| `IHybridCryptography` | [`HybridCryptography`](#hybridcryptography) | `Encrypt`/`Decrypt` (bytes e texto Base64; chave em PEM ou `RsaKey`), `EncryptFileAsync`/`DecryptFileAsync`/`EncryptToFileAsync`/`DecryptFromFileAsync` (arquivos) |
 | `IPasswordHasher` | [`Pbkdf2PasswordHasher`](#pbkdf2passwordhasher) | `Hash(string)`, `Verify(string, string?)`, `NeedsRehash(string)` |
 
 ```csharp
@@ -653,7 +653,7 @@ public sealed class PartnerExport(IHybridCryptography hybrid)
 | `RsaCryptography(signatureMode)` · `TecCoreOptions.RsaSignatureMode` | `RsaSignatureMode.Pss` | `Pkcs1` só para sistemas legados |
 | `GenerateKeyPair(keySizeInBits)` | 2048 | Entre 2048 e 8192, múltiplo de 8 |
 | `RsaCryptography.MaximumImportKeySize` | 16384 | Maior chave aceita na importação (PEM até 32 KB) |
-| `Pbkdf2PasswordHasher(iterations)` · `TecCoreOptions.PasswordHashIterations` | 600.000 (`DefaultIterations`) | De 100.000 a 10.000.000 |
+| `Pbkdf2PasswordHasher(iterations)` · `TecCoreOptions.PasswordHashIterations` | 600.000 (`DefaultIterations`) | De 100.000 a 2.000.000 |
 | `Pbkdf2PasswordHasher.MaxPasswordLength` | 1024 | Tamanho máximo da senha |
 | `HashAlgorithmType` | `Sha256` | `Sha384` e `Sha512` disponíveis |
 | `SecureRandomGenerator.GenerateToken(byteLength)` | 32 | 16 a 1024 bytes |
@@ -681,6 +681,7 @@ builder.Services.AddTecCore(options =>
 | `ArgumentException` | Chave AES em Base64 vazia ou inválida | *A chave deve estar em Base64.* |
 | `ArgumentException` | Chave AES em Base64 com tamanho errado | *A chave AES deve ter 16, 24 ou 32 bytes (Base64 de 24, 32 ou 44 caracteres).* |
 | `ArgumentException` | Stream de entrada sem leitura / saída sem escrita / mesmo stream | *O stream de entrada não permite leitura.* · *O stream de saída não permite escrita.* · *Os streams de entrada e saída devem ser diferentes.* |
+| `ArgumentException` | `EncryptFileAsync`/`DecryptFileAsync` (AES-GCM e híbrida) com o mesmo caminho de entrada e saída | *Os caminhos de arquivo de entrada e saída devem ser diferentes.* |
 | `AuthenticationTagMismatchException` (`CryptographicException`) | AES-GCM com chave errada ou dados/AAD adulterados | Confira a chave e o contexto (`associatedData`) |
 | `CryptographicException` | AES-GCM: formato inválido, truncado ou Base64 do texto cifrado inválido | *Dados criptografados inválidos ou corrompidos.* |
 | `CryptographicException` | AES-GCM ou híbrida: byte de versão desconhecido | *Versão de formato dos dados criptografados não suportada: {v} (esperado 1). Formato não suportado: byte de versão ausente ou desconhecido.* |
@@ -698,7 +699,7 @@ builder.Services.AddTecCore(options =>
 | `ArgumentException` | `ComputeHashAsync` com stream sem leitura; `ComputeFileHashAsync` com caminho vazio | *O stream não permite leitura.* |
 | `ArgumentOutOfRangeException` | `HashAlgorithmType` fora do enum | — |
 | `FileNotFoundException` | `ComputeFileHashAsync` com arquivo inexistente | — |
-| `ArgumentOutOfRangeException` | `Pbkdf2PasswordHasher` com iterações fora de 100.000–10.000.000; `AddTecCore` com `PasswordHashIterations` inválido (na subida) | *O valor deve estar entre 100000 e 10000000.* |
+| `ArgumentOutOfRangeException` | `Pbkdf2PasswordHasher` com iterações fora de 100.000–2.000.000; `AddTecCore` com `PasswordHashIterations` inválido (na subida) | *O valor deve estar entre 100000 e 2000000.* |
 | `ArgumentException` | `Hash` com senha vazia / acima de 1024 caracteres | *A senha não pode ser vazia.* · *A senha deve ter no máximo 1024 caracteres.* |
 | — | `Verify` com hash nulo, malformado ou adulterado | Retorna `false`, sem exceção |
 | `ArgumentOutOfRangeException` | `SecureRandomGenerator` com tamanho fora dos limites | *O valor deve estar entre {min} e {max}.* |
@@ -785,4 +786,4 @@ Não: o JSON contém só a chave pública e a leitura sempre lança `JsonExcepti
 
 ---
 
-⬅️ [Anterior](datas.md) · [📚 Índice](README.md) · [Próximo](csv.md) ➡️
+⬅️ [Anterior: Datas e dias úteis](datas.md) · [📚 Índice](README.md) · [Próximo: CSV](csv.md) ➡️

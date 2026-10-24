@@ -1,3 +1,4 @@
+using System.Globalization;
 using TEC.Core.Csv.Attributes;
 using TEC.Core.Dates.Holidays.Internal;
 
@@ -113,10 +114,14 @@ public sealed class Holiday
     }
 
     /// <summary>Data, descrição e localidade: "25/01/2026 - Aniversário de São Paulo (SP/3550308)".</summary>
-    public override string ToString() => Scope switch
+    public override string ToString()
     {
-        HolidayScope.Municipal => $"{Date:dd/MM/yyyy} - {Description} ({Uf}/{IbgeCode})",
-        HolidayScope.State => $"{Date:dd/MM/yyyy} - {Description} ({Uf})",
-        _ => $"{Date:dd/MM/yyyy} - {Description}",
-    };
+        string formattedDate = Date.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture);
+        return Scope switch
+        {
+            HolidayScope.Municipal => $"{formattedDate} - {Description} ({Uf}/{IbgeCode})",
+            HolidayScope.State => $"{formattedDate} - {Description} ({Uf})",
+            _ => $"{formattedDate} - {Description}",
+        };
+    }
 }

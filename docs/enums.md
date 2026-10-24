@@ -221,4 +221,4 @@ Não no uso contínuo: os metadados de cada tipo são lidos uma única vez e fic
 </details>
 
 ---
-⬅️ [CSV](csv.md) · [📚 Índice](README.md) · [Injeção de dependência](injecao-dependencia.md) ➡️
+⬅️ [Anterior: CSV](csv.md) · [📚 Índice](README.md) · [Próximo: Injeção de dependência](injecao-dependencia.md) ➡️

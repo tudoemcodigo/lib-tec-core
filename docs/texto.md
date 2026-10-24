@@ -410,7 +410,9 @@ if (!Base64UrlEncoder.TryDecode(request.Query["id"], out byte[] raw) || raw.Leng
 
 ### BoundedFileReader
 
-`TEC.Core.IO.BoundedFileReader` lê arquivos de texto **pequenos e sensíveis** (credencial montada em volume, segredo do Kubernetes, `.env`) com segurança:
+> `TEC.Core.IO` · `static class`
+
+`BoundedFileReader.TryReadUtf8(string path, int maxBytes, out string? text)` lê arquivos de texto **pequenos e sensíveis** (credencial montada em volume, segredo do Kubernetes, `.env`) com segurança:
 
 | Garantia | Detalhe |
 |---|---|
@@ -532,4 +534,4 @@ Sim. `RemoveAccents`, `EqualsIgnoreCaseAndAccents`, `ContainsIgnoreCaseAndAccent
 </details>
 
 ---
-⬅️ [Exceções](excecoes.md) · [📚 Índice](README.md) · [Números](numeros.md) ➡️
+⬅️ [Anterior: Exceções](excecoes.md) · [📚 Índice](README.md) · [Próximo: Números](numeros.md) ➡️

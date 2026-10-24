@@ -215,7 +215,7 @@ Padrões de segurança e onde ajustá-los (detalhes em cada tema):
 
 | Opção | Padrão | Onde |
 |---|---|---|
-| Iterações do PBKDF2 | 600.000 (100.000 a 10.000.000) | `TecCoreOptions.PasswordHashIterations` / `new Pbkdf2PasswordHasher(iterations)` |
+| Iterações do PBKDF2 | 600.000 (100.000 a 2.000.000) | `TecCoreOptions.PasswordHashIterations` / `new Pbkdf2PasswordHasher(iterations)` |
 | Assinatura RSA | PSS | `TecCoreOptions.RsaSignatureMode` |
 | Tamanho da chave RSA | 2048 bits (2048 a 8192 na geração; até 16384 na importação) | `GenerateKeyPair(keySizeInBits)` |
 | Anti-injeção de fórmulas | ligado | `CsvOptions.SanitizeFormulas` |

@@ -32,7 +32,7 @@ flowchart LR
     P -->|"ClearDomainEvents()"| A
 ```
 
-O TEC.Core só define os contratos. Quem coleta os eventos é a persistência: o `TEC.Messaging.EntityFrameworkCore` grava cada evento no Outbox, na mesma transação do agregado.
+O TEC.Core só define os contratos. Quem coleta os eventos é a persistência: o interceptor do `TEC.Messaging.SqlServer` (ou do `TEC.Messaging.PostgreSql`) grava cada evento no Outbox, na mesma transação do agregado.
 
 ---
 
@@ -45,7 +45,7 @@ O TEC.Core só define os contratos. Quem coleta os eventos é a persistência: o
 | Membro | Descrição |
 |---|---|
 | `Id` | Identificador (`protected set`) |
-| `Equals` / `==` / `!=` / `GetHashCode` | Iguais quando têm o **mesmo tipo concreto** e o mesmo `Id`. Entidade sem `Id` (valor padrão, "transiente") só é igual a si mesma |
+| `Equals` / `==` / `!=` / `GetHashCode` | Iguais quando têm o **mesmo tipo concreto** e o mesmo `Id`. Entidade sem `Id` (valor padrão, "transiente") só é igual a si mesma. O hash depende do tipo real da entidade e permanece estável quando o ORM atribui o `Id` |
 
 > [!NOTE]
 > O nome não é `Entity` para não colidir com `TEC.ORM.Entities.Entity<TKey>`, que traz soft delete e auditoria. Use o do ORM quando quiser esses recursos; use o daqui quando o domínio não deve conhecer a persistência.
@@ -120,7 +120,7 @@ Não há opções nem registro em DI: são tipos base.
 <details>
 <summary><b>Os eventos são publicados automaticamente?</b></summary>
 
-Não pelo TEC.Core. Ele só guarda os eventos. A persistência (por exemplo, o interceptor do `TEC.Messaging.EntityFrameworkCore`) os coleta no `SaveChanges` e chama `ClearDomainEvents()`.
+Não pelo TEC.Core. Ele só guarda os eventos. A persistência (por exemplo, o interceptor do `TEC.Messaging.SqlServer` ou do `TEC.Messaging.PostgreSql`) os coleta no `SaveChanges` e chama `ClearDomainEvents()`.
 </details>
 
 <details>
@@ -131,4 +131,4 @@ Não. Um agregado pertence a um único caso de uso (um escopo de DI) por vez, co
 
 ---
 
-⬅️ [Common](common.md) · [📚 Índice](README.md) · [Respostas de API](respostas-api.md) ➡️
+⬅️ [Anterior: Common](common.md) · [📚 Índice](README.md) · [Próximo: Respostas de API](respostas-api.md) ➡️

@@ -115,13 +115,13 @@
       "tec.core.loadgenerator": {
         "type": "Project",
         "dependencies": {
-          "TEC.Core": "[0.2.0, )"
+          "TEC.Core": "[0.0.1, )"
         }
       },
       "tec.core.sampleapi": {
         "type": "Project",
         "dependencies": {
-          "TEC.Core": "[0.2.0, )"
+          "TEC.Core": "[0.0.1, )"
         }
       },
       "Microsoft.Extensions.DependencyInjection.Abstractions": {
@@ -277,13 +277,13 @@
       "tec.core.loadgenerator": {
         "type": "Project",
         "dependencies": {
-          "TEC.Core": "[0.2.0, )"
+          "TEC.Core": "[0.0.1, )"
         }
       },
       "tec.core.sampleapi": {
         "type": "Project",
         "dependencies": {
-          "TEC.Core": "[0.2.0, )"
+          "TEC.Core": "[0.0.1, )"
         }
       },
       "Microsoft.Extensions.DependencyInjection.Abstractions": {

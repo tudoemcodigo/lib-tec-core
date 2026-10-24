@@ -74,7 +74,9 @@ internal static class CsvValueConverter
             return format is null ? TimeOnly.Parse(text, culture) : TimeOnly.ParseExact(text, format, culture);
 
         if (type == typeof(DateTimeOffset))
-            return format is null ? DateTimeOffset.Parse(text, culture) : DateTimeOffset.ParseExact(text, format, culture);
+            return format is null
+                ? DateTimeOffset.Parse(text, culture, DateTimeStyles.AssumeUniversal)
+                : DateTimeOffset.ParseExact(text, format, culture, DateTimeStyles.AssumeUniversal);
 
         if (type == typeof(TimeSpan))
             return format is null ? TimeSpan.Parse(text, culture) : TimeSpan.ParseExact(text, format, culture);

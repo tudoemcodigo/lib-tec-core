@@ -1,3 +1,7 @@
+<div align="center">
+<img src="https://www.tudoemcodigo.com/marca/PNG/tudoemcodigo-icone-512.png" alt="Tudo em Código" width="90" />
+</div>
+
 [🏠 TEC.Core](../../README.md) › [📚 Documentação](../../docs/README.md) › CI/CD
 
 # ⚙️ CI/CD e publicação
@@ -23,9 +27,9 @@
 
 | Arquivo | Nome no Actions | Chama | Função |
 |---|---|---|---|
-| [`ci.yml`](ci.yml) | **CI** | `dotnet-ci.yml@v2` | Validação de PR, merge queue, push na `main`, semanal e manual. No push na `main`, publica a prévia `<Version>-preview.N` |
-| [`release.yml`](release.yml) | **Publicar versão** | `dotnet-release.yml@v2` | Versão estável ou `-rc.N`: convenções, pack, unitários ×3 + cobertura e CodeQL, depois tag, Release e push no feed |
-| [`performance.yml`](performance.yml) | **Performance** | `dotnet-test.yml@v2` e `dotnet-benchmark.yml@v2` | Só manual: carga rápida (`Carga-CI`) e/ou suítes pesadas; benchmarks opcionais |
+| [`ci.yml`](ci.yml) | **CI** | `dotnet-ci.yml@v1` | Validação de PR, merge queue, push na `main`, semanal e manual. No push na `main`, publica a prévia `<Version>-preview.N` |
+| [`release.yml`](release.yml) | **Publicar versão** | `dotnet-release.yml@v1` | Versão estável ou `-rc.N`: convenções, pack, unitários ×3 + cobertura e CodeQL, depois tag, Release e push no feed; requer `checks: read` e `pull-requests: read` para os portões de release |
+| [`performance.yml`](performance.yml) | **Performance** | `dotnet-test.yml@v1` e `dotnet-benchmark.yml@v1` | Só manual: carga rápida (`Carga-CI`) e/ou suítes pesadas; benchmarks opcionais |
 | [`../dependabot.yml`](../dependabot.yml) | — | — | Atualizações semanais de NuGet e actions (canônico) |
 | [`../zizmor.yml`](../zizmor.yml) | — | — | Auditoria de segurança dos workflows (canônico) |
 
@@ -89,16 +93,16 @@ PR cancela a execução anterior (`concurrency` por ref); fora de PR, cada execu
 
 | Job | O que faz |
 |---|---|
-| `changes` | Lista os arquivos do PR; se forem só documentação, os demais jobs são pulados |
-| `convenções` | Compara os arquivos canônicos com o `template/` do tec-workflows e valida os csproj (sem `Version`, sem `PackageReference` para TEC.*) |
-| `build + pack` | `restore --locked-mode`, build **Release** da solução inteira (avisos como erro; benchmarks e samples continuam compilando) e `dotnet pack` com *package validation* |
-| `unit net10.0` | `TEC.Core.Tests` com cobertura |
-| `unit net8.0` | `TEC.Core.Tests` no runtime .NET 8 |
-| `unit sem ICU` | `TEC.Core.Tests` com `DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1` |
-| `relatório` | Junta os `.trx` (aprovados, falhas, pulados com motivo) e a cobertura no resumo da execução |
+| `changes` (**Mudanças**) | Lista os arquivos do PR; se forem só documentação, os demais jobs são pulados |
+| `conventions` (**Convenções**) | Compara os arquivos canônicos com o `template/` do tec-workflows e valida os csproj (sem `Version`, sem `PackageReference` para TEC.*) |
+| `build-pack` (**Build e pacote**) | `restore --locked-mode`, build **Release** da solução inteira (avisos como erro; benchmarks e samples continuam compilando) e `dotnet pack` com *package validation* |
+| `unit` (**Unitários**), `net10.0` | `TEC.Core.Tests` com cobertura |
+| `unit`, `net8.0` | `TEC.Core.Tests` no runtime .NET 8 |
+| `unit`, `net10.0-sem-icu` | `TEC.Core.Tests` (net10.0) com `DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1` |
+| `report` (**Relatório**) | Junta os `.trx` (aprovados, falhas, pulados com motivo) e a cobertura no resumo da execução |
 | `CodeQL` | C# `security-extended`; alertas de severidade ≥ 7,0 falham o job |
 | `ci-ok` | Falha se algum job falhou ou foi cancelado. **Check obrigatório da proteção da `main`** (`ci / ci-ok`) |
-| `publicar-previa` | Só no push na `main`, depois do `ci-ok` verde: publica `<Version do Directory.Build.props>-preview.N` (N sequencial por versão, reinicia a cada nova `<Version>`; ex.: `0.0.1-preview.3`) no feed. Se a tag `v<Version>` já existe, é pulado: o `build + pack` avisa com um `::notice::` e nenhuma prévia sai (suba a `<Version>` para voltar a gerar prévias) |
+| `publicar-previa` (**Publicar prévia**) | Só no push na `main`, depois do `ci-ok` verde: publica `<Version do Directory.Build.props>-preview.N` (N sequencial por versão, reinicia a cada nova `<Version>`; ex.: `0.0.1-preview.3`) no feed. Se a tag `v<Version>` já existe, é pulado: o `build + pack` avisa com um `::notice::` e nenhuma prévia sai (suba a `<Version>` para voltar a gerar prévias) |
 
 ---
 
@@ -108,14 +112,14 @@ Fluxo: PR → merge na `main` → prévia automática (`<Version>-preview.N`, ex
 estável ou release candidate → **Publicar versão**:
 
 1. GitHub → **Actions** → **Publicar versão** → **Run workflow** (branch `main`).
-2. Digite a versão: `0.0.1`/`1.1.0` (estável) ou `1.1.0-rc.1` (release candidate). Prévias não são digitadas aqui:
+2. Digite a versão: `0.0.1`/`1.1.0` (estável) ou `1.1.0-rc.1` (release candidate). Ela precisa ser **igual à `<Version>` do `Directory.Build.props`** da `main`: para publicar outra, ajuste a `<Version>` num PR antes. Prévias não são digitadas aqui:
    saem do CI a cada push na `main`.
 3. **Run workflow**.
 4. Depois de publicar `X.Y.Z`, suba a `<Version>` do `Directory.Build.props` para a próxima (PR normal) quando quiser
    novas prévias: com a tag `v<Version>` existente, o CI da `main` valida tudo normalmente, mas não gera prévia. O
    TEC.Core pode ficar em `0.0.1` de propósito e ainda receber correções de build e documentação.
 
-O workflow valida a versão (SemVer, a partir da `main`, tag inexistente), roda os portões em paralelo (convenções, pack, unitários ×3 com relatório de cobertura, CodeQL), cria a tag `vX.Y.Z` e o Release (notas automáticas, `.nupkg` e `.snupkg` anexados; `-rc.N` vira *pre-release*) e **só então** publica no feed com o `GITHUB_TOKEN`. Se algo falhar antes, nada é criado. Falha no push do feed: **Re-run failed jobs**. Testes de carga não são portão da publicação (rode o **Performance** antes, se quiser os números).
+O workflow valida a versão (formato `X.Y.Z` ou `X.Y.Z-rc.N`, igual à `<Version>`, tag inexistente e maior que a última versão lançada), roda os portões em paralelo (convenções, pack, unitários ×3 com relatório de cobertura, CodeQL), cria a tag `vX.Y.Z` e o Release (job `release`, no environment `publicacao`; notas automáticas, `.nupkg` e `.snupkg` anexados; `-rc.N` vira *pre-release*) e **só então** publica no feed (job `publicar`) com o `GITHUB_TOKEN`. Se algo falhar antes, nada é criado. Falha no push do feed: **Re-run failed jobs**. Testes de carga não são portão da publicação (rode o **Performance** antes, se quiser os números).
 
 | Mudança | Exemplo | Incremento |
 |---|---|---|
@@ -173,7 +177,8 @@ Configuração única do repositório:
 
 | Recurso | Onde |
 |---|---|
-| Workflows centrais | `tudoemcodigo/tec-workflows` **público** com a tag `v1` |
+| Workflows centrais | `tudoemcodigo/tec-workflows` **público** com a tag `v1` (única versão publicada disponível) |
+| Environment `publicacao` | *Settings → Environments*: revisores obrigatórios e *deployment branches* = `main`; o job `release` (tag e Release) espera a aprovação |
 | Proteção da `main` | *Settings → Rules → Rulesets*: exigir PR, check **`ci / ci-ok`**, branch atualizada (ou merge queue), bloquear push direto e force push |
 | Acesso ao pacote | *Packages* → `TEC.Core` → *Package settings* → *Manage Actions access*: **Write** para este repositório (depois que o pacote existe) |
 
@@ -204,7 +209,7 @@ Actions de terceiros ficam fixadas por SHA no `tec-workflows`; os workflows da o
 <details>
 <summary><code>workflow was not found</code> / <code>Unable to resolve action tudoemcodigo/tec-workflows</code></summary>
 
-**Causa:** o `tec-workflows` está privado (repositório público não usa workflow de privado) ou a tag `v1` não existe. **Solução:** veja [Variables e Secrets](#-variables-e-secrets).
+**Causa:** o `tec-workflows` está privado (repositório público não usa workflow de privado) ou a tag configurada não existe. **Solução:** confirme a visibilidade pública e use uma tag publicada; no momento, `v1` é a versão disponível. Veja [Variables e Secrets](#-variables-e-secrets).
 
 </details>
 
@@ -241,7 +246,7 @@ Em *Package settings*, dê acesso **Write** ao repositório.
 </details>
 
 <details>
-<summary>Falha só no job <code>unit sem ICU</code></summary>
+<summary>Falha só no job <code>net10.0-sem-icu</code> (Unitários)</summary>
 
 Código dependente de cultura: use `BrazilianCulture.Instance` e reproduza com `DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 dotnet test --project TEC.Core.Tests -f net10.0`.
 

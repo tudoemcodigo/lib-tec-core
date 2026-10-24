@@ -14,6 +14,9 @@ public abstract class DomainEntity<TId> : IEquatable<DomainEntity<TId>>
     /// <summary>Identificador da entidade.</summary>
     public TId Id { get; protected set; } = default!;
 
+    /// <summary>Retorna o tipo real da entidade, desconsiderando proxies dinâmicos de ORM.</summary>
+    protected virtual Type GetUnproxiedType() => GetType();
+
     /// <inheritdoc />
     public bool Equals(DomainEntity<TId>? other)
     {
@@ -21,7 +24,7 @@ public abstract class DomainEntity<TId> : IEquatable<DomainEntity<TId>>
             return false;
         if (ReferenceEquals(this, other))
             return true;
-        if (other.GetType() != GetType() || IsTransient() || other.IsTransient())
+        if (other.GetUnproxiedType() != GetUnproxiedType() || IsTransient() || other.IsTransient())
             return false;
         return EqualityComparer<TId>.Default.Equals(Id, other.Id);
     }
@@ -29,9 +32,8 @@ public abstract class DomainEntity<TId> : IEquatable<DomainEntity<TId>>
     /// <inheritdoc />
     public override bool Equals(object? obj) => obj is DomainEntity<TId> other && Equals(other);
 
-    /// <inheritdoc />
-    public override int GetHashCode() =>
-        IsTransient() ? System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(this) : HashCode.Combine(GetType(), Id);
+    /// <summary>Retorna um hash estável durante o ciclo de vida da entidade, inclusive antes da atribuição de <see cref="Id"/>.</summary>
+    public override int GetHashCode() => HashCode.Combine(GetUnproxiedType());
 
     /// <summary>Compara duas entidades pela identidade.</summary>
     /// <param name="left">Primeira entidade.</param>

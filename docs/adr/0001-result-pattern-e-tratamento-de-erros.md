@@ -1,3 +1,5 @@
+[🏠 TEC.Core](../../README.md) › [📚 Documentação](../README.md) › [🏛️ ADRs](README.md) › ADR-0001
+
 # ADR-0001: Adoção do Result Pattern em Substituição a Exceções para Controle de Fluxo
 
 - **Status:** Aceito
@@ -17,7 +19,7 @@ Em arquiteturas orientadas a microsserviços e alta volumetria, o uso de exceç�
 
 ## 💡 Decisão
 
-Implementar no `TEC.Core` os tipos [`Result`](file:///D:/Projetos/Componentes/TEC.Core/TEC.Core/Common/Results/Result.cs), [`Result<T>`](file:///D:/Projetos/Componentes/TEC.Core/TEC.Core/Common/Results/Result.cs#L102), [`Error`](file:///D:/Projetos/Componentes/TEC.Core/TEC.Core/Common/Results/Error.cs) e o enum [`ErrorType`](file:///D:/Projetos/Componentes/TEC.Core/TEC.Core/Common/Results/ErrorType.cs) como o padrão canônico para todos os componentes do ecossistema (`TEC.Cqrs`, `TEC.ORM`, `TEC.Vault`, etc.).
+Implementar no `TEC.Core` os tipos [`Result`](../../TEC.Core/Common/Results/Result.cs), [`Result<T>`](../../TEC.Core/Common/Results/Result.cs), [`Error`](../../TEC.Core/Common/Results/Error.cs) e o enum [`ErrorType`](../../TEC.Core/Common/Results/ErrorType.cs) como o padrão canônico para todos os componentes do ecossistema (`TEC.Cqrs`, `TEC.ORM`, `TEC.Vault`, etc.).
 
 ### Diretrizes de Projeto:
 - **Imutabilidade e Integridade:** `Result` e `Error` são imutáveis. Um resultado de sucesso não pode conter erros, e uma falha exige obrigatoriamente ao menos um `Error`. Subclasses externas são bloqueadas via `private protected`.
@@ -30,7 +32,7 @@ Implementar no `TEC.Core` os tipos [`Result`](file:///D:/Projetos/Componentes/TE
 ### Positivas
 - **Desempenho Extremo:** Validações e rejeições de negócio executam sem custo de stack trace.
 - **Consistência Ecossistêmica:** Todos os componentes TEC compartilham os mesmos contratos de erro e status.
-- **Integração Fluida com APIs:** Conversão direta de `Result` para [`ApiResponse`](file:///D:/Projetos/Componentes/TEC.Core/TEC.Core/Responses/ApiResponse.cs) sem código repetitivo em controladores ou Minimal APIs.
+- **Integração Fluida com APIs:** Conversão direta de `Result` para [`ApiResponse`](../../TEC.Core/Responses/ApiResponse.cs) sem código repetitivo em controladores ou Minimal APIs.
 
 ### Negativas / Trade-offs
 - Exige disciplina da equipe para não acessar `.Value` em caso de falha (protegido por `InvalidOperationException`).
@@ -39,3 +41,7 @@ Implementar no `TEC.Core` os tipos [`Result`](file:///D:/Projetos/Componentes/TE
 ## 🔄 Alternativas Consideradas
 1. **Bibliotecas de Terceiros (ex.: FluentResults, OneOf, LanguageExt):** Rejeitadas para evitar dependências externas transitivas no pacote fundacional do ecossistema e manter total compatibilidade com Native AOT.
 2. **Exceções Customizadas por Domínio:** Rejeitadas para fluxos esperados de negócio; exceções (`AppException`) foram reservadas apenas para cenários genuinamente excepcionais e falhas irrecuperáveis.
+
+---
+
+⬅️ [🏛️ Índice dos ADRs](README.md) · [Próximo: ADR-0002](0002-envelope-padronizado-api-response-e-mascaramento-de-erros.md) ➡️

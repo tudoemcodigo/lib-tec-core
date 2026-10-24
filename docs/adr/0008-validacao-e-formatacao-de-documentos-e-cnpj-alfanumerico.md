@@ -1,3 +1,5 @@
+[🏠 TEC.Core](../../README.md) › [📚 Documentação](../README.md) › [🏛️ ADRs](README.md) › ADR-0008
+
 # ADR-0008: Validação e Formatação de Documentos com Suporte ao CNPJ Alfanumérico (IN RFB 2.229/2024)
 
 - **Status:** Aceito
@@ -18,7 +20,7 @@
 Implementar validadores e formatadores de alta performance no namespace `TEC.Core.Text`:
 
 ### 1. Suporte Nativo ao CNPJ Alfanumérico
-- [`DocumentValidator.IsValidCnpj`](file:///D:/Projetos/Componentes/TEC.Core/TEC.Core/Text/Validation/DocumentValidator.cs#L39) e [`CheckDigitCalculator.CalculateCnpj`](file:///D:/Projetos/Componentes/TEC.Core/TEC.Core/Text/Internal/CheckDigitCalculator.cs#L29):
+- [`DocumentValidator.IsValidCnpj`](../../TEC.Core/Text/Validation/DocumentValidator.cs) e [`CheckDigitCalculator.CalculateCnpj`](../../TEC.Core/Text/Internal/CheckDigitCalculator.cs):
   - Os primeiros 12 caracteres podem conter dígitos de `0` a `9` e letras maiúsculas de `A` a `Z`.
   - Os 2 dígitos verificadores finais permanecem estritamente numéricos.
   - **Fórmula de Módulo 11:** O valor decimal de cada caractere para cálculo dos pesos é definido pelo seu código ASCII subtraído de 48 (`caractere - '0'`), em conformidade com o manual técnico oficial da Receita Federal.
@@ -39,7 +41,11 @@ Implementar validadores e formatadores de alta performance no namespace `TEC.Cor
 ### Positivas
 - **Prontidão Fiscal e Mercadológica:** Aplicações construídas com `TEC.Core` já nascem 100% preparadas para emitir, receber e processar notas fiscais e cadastros com o novo CNPJ alfanumérico.
 - **Resiliência a Negação de Serviço:** Imunidade comprovada contra ataques de ReDoS e exaustão de heap via `NonBacktracking`.
-- **Confiabilidade:** Geradores randômicos de documentos válidos ([`DocumentGenerator`](file:///D:/Projetos/Componentes/TEC.Core/TEC.Core/Text/Generation/DocumentGenerator.cs)) para ambientes de testes e seed de dados.
+- **Confiabilidade:** Geradores randômicos de documentos válidos ([`DocumentGenerator`](../../TEC.Core/Text/Generation/DocumentGenerator.cs)) para ambientes de testes e seed de dados.
 
 ### Negativas / Trade-offs
 - Sistemas legados integrados ainda em formato puramente numérico precisarão de adequação nas suas colunas de banco (de `numeric(14)` para `varchar(14)`).
+
+---
+
+⬅️ [Anterior: ADR-0007](0007-calculo-de-dias-uteis-feriados-e-fuso-horario-de-brasilia.md) · [🏛️ Índice dos ADRs](README.md) · [Próximo: ADR-0009](0009-coalescencia-de-requisicoes-concorrentes-com-singleflight.md) ➡️

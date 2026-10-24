@@ -32,7 +32,7 @@ public sealed class Pbkdf2PasswordHasher : IPasswordHasher
     public const int MaxPasswordLength = 1024;
 
     private const int MinIterations = 100_000;
-    private const int MaxIterations = 10_000_000;
+    private const int MaxIterations = 2_000_000;
     private const string Prefix = "PBKDF2-SHA256";
     private const int SaltSize = 16;
     private const int HashSize = 32;
@@ -95,7 +95,7 @@ public sealed class Pbkdf2PasswordHasher : IPasswordHasher
 
     /// <inheritdoc />
     public bool NeedsRehash(string hashedPassword) =>
-        !TryParse(hashedPassword, out int iterations, out _, out var hash) || iterations < _iterations || hash.Length < HashSize;
+        !TryParse(hashedPassword, out int iterations, out _, out var hash) || iterations != _iterations || hash.Length != HashSize;
 
     private static byte[] Derive(string password, byte[] salt, int iterations, int length)
     {

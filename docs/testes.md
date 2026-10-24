@@ -28,7 +28,7 @@
 
 | Projeto | Ferramenta | O que faz |
 |---|---|---|
-| `TEC.Core.Tests` | [TUnit](https://tunit.dev) + [FsCheck](https://fscheck.github.io/FsCheck/) | **549 testes por TFM**: unidade, regressões de segurança, fuzzing, DoS, vazamento de dados e tempo constante (rápido) |
+| `TEC.Core.Tests` | [TUnit](https://tunit.dev) + [FsCheck](https://fscheck.github.io/FsCheck/) | **599 testes por TFM**: unidade, regressões de segurança, fuzzing, DoS, vazamento de dados e tempo constante (rápido) |
 | `TEC.Core.LoadTests` | TUnit | Concorrência nos singletons e fumaça da API de exemplo (`Carga-CI`); volume, soak e carga sustentada (`Carga-Pesada`) |
 | `TEC.Core.Benchmarks` | [BenchmarkDotNet](https://benchmarkdotnet.org) | Tempo e alocação, `net8.0` × `net10.0` |
 | `samples/TEC.Core.SampleApi` · `samples/TEC.Core.LoadGenerator` | ASP.NET Core · console | Alvo e gerador da carga HTTP (veja [samples](../samples/README.md)) |
@@ -67,7 +67,7 @@ flowchart LR
 
 ### Como rodar localmente
 
-Pré-requisitos: SDK do `global.json` (`10.0.100` ou superior, `rollForward: latestFeature`) e os runtimes **.NET 8** e **ASP.NET Core 8** (alvo `net8.0`; a API de exemplo usa ASP.NET Core).
+Pré-requisitos: SDK do `global.json` (`10.0.401`, `rollForward: latestPatch`) e os runtimes **.NET 8** e **ASP.NET Core 8** (alvo `net8.0`; a API de exemplo usa ASP.NET Core).
 
 ```bash
 # Unitários, segurança rápida e Carga-CI (net8.0 e net10.0); o CI roda só o TEC.Core.Tests
@@ -107,16 +107,19 @@ dotnet test --project TEC.Core.Tests     -c Release -f net10.0 --treenode-filter
 
 | Pasta | Classe | O que cobre |
 |---|---|---|
-| `Common/` | `CommonTests` | `Guard`, `Result`/`Result<T>`, `Error`, `ErrorType`, JSON padrão e `BrazilianCulture` |
+| `Common/` | `CommonTests`, `ResultCompositionTests` | `Guard`, `Result`/`Result<T>`, `Error`, `ErrorType`, JSON padrão, `BrazilianCulture` e a composição (`Bind`, `Ensure`, `BindAsync`, `MapAsync`) |
 | `Compatibility/` | `CompatibilityTests` | Comportamento idêntico em `net8.0` e `net10.0` (equivalentes internos de APIs do .NET 9+) e caminhos compatíveis com AOT |
 | `Cryptography/` | `AesGcmCryptographyTests`, `AsymmetricCryptographyTests`, `HashingTests` | AES-GCM em memória e stream, RSA e híbrida, SHA/HMAC (vetores RFC 4231), PBKDF2 e geradores |
+| `Domain/` | `AggregateRootTests` | `DomainEntity<TId>` (igualdade e entidades transientes), `AggregateRoot<TId>` e o limite de eventos pendentes |
 | `Csv/` | `CsvTests` | Leitura e escrita, atributos, tipos, modo estrito, linhas inválidas e anti-injeção de fórmulas |
 | `Dates/` | `BusinessDayCalculatorTests`, `HolidayCalendarTests`, `DateFormattingTests` | Dias úteis, Páscoa e feriados nacionais, localidades (UF/IBGE), fontes CSV/JSON/banco/HTTP/função, prioridade e falhas de fonte, fuso de Brasília, relógio injetável, formatação e parse |
 | `Enums/` | `EnumHelperTests` | Descrições, nomes de exibição, parse flexível e `[Flags]` |
 | `Exceptions/` | `AppExceptionTests` | Hierarquia, códigos padrão, status HTTP e conversão para `Result` |
+| `IO/` | `BoundedFileReaderTests` | Limite de bytes, UTF-8 estrito, BOM e arquivos que não informam o tamanho |
 | `Numbers/` | `NumbersTests` | Moeda, percentual, arredondamentos, extenso e `TryParseBrazilianDecimal` |
 | `Responses/` | `ApiResponseTests` | Envelope, `FromResult`/`FromException`, JSON gerado e paginação |
 | `Security/` | `SecurityRegressionTests`, `SecurityAuditTests`, `ThirdAuditTests`, `FourthAuditTests`, `CurrentUserTests` | Regressões das auditorias: limites, enums fora do domínio, fórmulas, mascaramento, UTF-16 inválido, formatos versionados, mensagens sem dados; contrato de `ICurrentUser` |
+| `Threading/` | `SingleFlightTests` | Uma execução por chave, cancelamento cooperativo e exceções compartilhadas |
 | `Text/` | `DocumentTests`, `StringExtensionsTests`, `Base64UrlEncoderTests` | CPF, CNPJ (inclusive alfanumérico), PIS, CEP, telefone, e-mail, máscaras, extensões de texto e Base64Url estrito |
 | `Validation/` | `ParameterValidationTests` | Entradas inválidas falham de forma clara, nunca com resultado errado em silêncio |
 

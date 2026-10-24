@@ -1,3 +1,5 @@
+[🏠 TEC.Core](../../README.md) › [📚 Documentação](../README.md) › [🏛️ ADRs](README.md) › ADR-0011
+
 # ADR-0011: Abstração Pura de Identidade de Execução Desacoplada do ASP.NET Core
 
 - **Status:** Aceito
@@ -21,7 +23,7 @@ Componentes de persistência (como `TEC.ORM`) precisam preencher automaticamente
 
 ## 💡 Decisão
 
-Definir no `TEC.Core` os contratos puros [`ICurrentUser`](file:///D:/Projetos/Componentes/TEC.Core/TEC.Core/Security/ICurrentUser.cs) e [`PrincipalKind`](file:///D:/Projetos/Componentes/TEC.Core/TEC.Core/Security/ICurrentUser.cs#L4):
+Definir no `TEC.Core` os contratos puros [`ICurrentUser`](../../TEC.Core/Security/ICurrentUser.cs) e [`PrincipalKind`](../../TEC.Core/Security/ICurrentUser.cs):
 
 ### Diretrizes de Projeto:
 - **Enum `PrincipalKind` Explícito:**
@@ -46,3 +48,7 @@ Definir no `TEC.Core` os contratos puros [`ICurrentUser`](file:///D:/Projetos/Co
 
 ### Negativas / Trade-offs
 - Em testes unitários que exercitam interceptores de auditoria, é necessário mockar ou instanciar um fake leve de `ICurrentUser`.
+
+---
+
+⬅️ [Anterior: ADR-0010](0010-mascaramento-de-dados-pessoais-lgpd-e-describe-untrusted.md) · [🏛️ Índice dos ADRs](README.md) · [Próximo: ADR-0012](0012-serializacao-json-estrita-imutavel-e-compativel-com-aot.md) ➡️

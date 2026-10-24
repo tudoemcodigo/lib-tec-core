@@ -1,3 +1,5 @@
+[🏠 TEC.Core](../../README.md) › [📚 Documentação](../README.md) › [🏛️ ADRs](README.md) › ADR-0010
+
 # ADR-0010: Mascaramento de Dados Pessoais (LGPD) e Descrição Segura para Logs
 
 - **Status:** Aceito
@@ -15,7 +17,7 @@
 
 ## 💡 Decisão
 
-Implementar no [`SensitiveDataMasker`](file:///D:/Projetos/Componentes/TEC.Core/TEC.Core/Text/Masking/SensitiveDataMasker.cs) rotinas determinísticas de anonimização:
+Implementar no [`SensitiveDataMasker`](../../TEC.Core/Text/Masking/SensitiveDataMasker.cs) rotinas determinísticas de anonimização:
 
 ### 1. Mascaramento Especializado por Documento
 - **CPF:** Padrão do governo federal `***.456.789-**`.
@@ -27,7 +29,7 @@ Implementar no [`SensitiveDataMasker`](file:///D:/Projetos/Componentes/TEC.Core/
 ### 2. Preservação de Pares Substitutos (*Surrogate Pair Safety*)
 - No método genérico `Mask(value, visibleStart, visibleEnd, maskChar)`, se o ponto de corte coincidir com a fronteira entre um *high surrogate* e um *low surrogate*, a fronteira é recuada automaticamente, garantindo que nenhum caractere UTF-16 seja partido ao meio.
 
-### 3. Registro Seguro de Textos Não Confiáveis ([`DescribeUntrusted`](file:///D:/Projetos/Componentes/TEC.Core/TEC.Core/Text/Masking/SensitiveDataMasker.cs#L122))
+### 3. Registro Seguro de Textos Não Confiáveis ([`DescribeUntrusted`](../../TEC.Core/Text/Masking/SensitiveDataMasker.cs))
 - Para descrever entradas inválidas em logs sem nunca reproduzir o conteúdo:
   - Gera uma descrição contendo apenas a **quantidade de caracteres** e um **identificador curto** derivado de **HMAC-SHA256**.
   - Exemplo de log gerado: `<32 caracteres, hmac:3fa0c19b7e21>`.
@@ -43,3 +45,7 @@ Implementar no [`SensitiveDataMasker`](file:///D:/Projetos/Componentes/TEC.Core/
 
 ### Negativas / Trade-offs
 - O HMAC de `DescribeUntrusted` muda a cada reinicialização da aplicação; não é possível correlacionar o hash entre deploys diferentes, o que é proposital por desenho de segurança.
+
+---
+
+⬅️ [Anterior: ADR-0009](0009-coalescencia-de-requisicoes-concorrentes-com-singleflight.md) · [🏛️ Índice dos ADRs](README.md) · [Próximo: ADR-0011](0011-contrato-de-identidade-de-execucao-com-icurrentuser.md) ➡️

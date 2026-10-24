@@ -454,4 +454,4 @@ Não: `AppException` exige que todos os erros tenham o mesmo `ErrorType` (o stat
 </details>
 
 ---
-⬅️ [Respostas de API](respostas-api.md) · [📚 Índice](README.md) · [Texto](texto.md) ➡️
+⬅️ [Anterior: Respostas de API](respostas-api.md) · [📚 Índice](README.md) · [Próximo: Texto](texto.md) ➡️

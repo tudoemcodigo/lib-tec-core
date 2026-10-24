@@ -71,7 +71,7 @@ flowchart LR
 | `decimal`, `double`, `float` | Separador de milhar só entre grupos completos (`1.234,56`; `1.5` é erro), desligável com `AllowThousandsSeparator`; `R$` no `decimal`; `double`/`float` recusam `NaN`, infinito e estouro (`1E999`) | `Format` + cultura |
 | `bool` | `Format` (`"Sim\|Não"`) ou `true/false`, `1/0`, `sim/não`, `s/n`, `yes/no`, `y/n`, `verdadeiro/falso`, `v/f` | `Format` ou `true`/`false` |
 | `DateTime` | `ParseExact` com `Format`, ou `Parse` com a cultura. Texto com `Z` ou offset (`2026-01-01T03:00:00Z`, `…-03:00`) vira o instante em UTC (`Kind = Utc`), igual em qualquer servidor; sem fuso, fica `Kind = Unspecified` | `Format` + cultura. Sem `Format`: `Kind = Utc` sai no formato de ida e volta `O` (`2026-01-01T03:00:00.1234567Z`); `Local`/`Unspecified` no padrão `G` da cultura (`01/01/2026 03:00:00`, **sem frações de segundo**) |
-| `DateTimeOffset` | `ParseExact` com `Format`, ou `Parse` com a cultura (texto sem offset assume o fuso do servidor) | `Format` + cultura. Sem `Format`: formato `O` (`2026-01-01T00:00:00.1234567-03:00`), que preserva frações de segundo e offset |
+| `DateTimeOffset` | `ParseExact` com `Format`, ou `Parse` com a cultura; texto sem offset assume UTC (`+00:00`) em qualquer servidor | `Format` + cultura. Sem `Format`: formato `O` (`2026-01-01T00:00:00.1234567-03:00`), que preserva frações de segundo e offset |
 | `DateOnly`, `TimeOnly`, `TimeSpan` | `ParseExact` com `Format`, ou `Parse` com a cultura | `Format` + cultura |
 | `Guid` | `Guid.Parse` | `ToString` |
 | Enums | Nome, valor numérico, `[Description]` ou `[Display]` | Conforme `EnumFormat` |
@@ -383,6 +383,7 @@ Um CSV aberto em uma planilha pode **executar fórmulas** vindas de dados do usu
 | Etapa | Comportamento |
 |---|---|
 | Escrita | Textos iniciados por `=`, `+`, `-`, `@`, TAB, CR ou suas variantes de largura total (`＝ ＋ － ＠`) recebem um apóstrofo (`'`) no início. |
+| Delimitadores alternativos | Quando a sanitização está ligada, valores que contêm um delimitador comum de planilha e um caractere de fórmula são colocados entre aspas, mesmo se o delimitador configurado for diferente. |
 | Escrita (apóstrofo já presente) | Textos que já começam com apóstrofo(s) seguido(s) de caractere de fórmula (`'=abc`, `'-5`) recebem um apóstrofo a mais (`''=abc`), para a ida e volta ser exata. `'texto` não é alterado. |
 | Leitura | Um único apóstrofo inicial é removido quando o restante (após os apóstrofos) começa com caractere de fórmula, e o valor original é recuperado (`''=abc` → `'=abc`; `'=abc` → `=abc`). |
 | Escopo | **Qualquer valor textual** e os **nomes de coluna do cabeçalho** (`[CsvColumn("=Total")]` é gravado como `'=Total` e reconhecido na leitura): `string`, `char`, `Uri` e tipos convertidos por `TypeConverter`/`ToString()`. Números (inclusive negativos), datas, `Guid`, booleanos e enums **não** são alterados. |
@@ -550,4 +551,4 @@ O `ICsvReader` do container é Singleton: o mesmo `OnInvalidRow` pode ser chamad
 
 ---
 
-⬅️ [Anterior](criptografia.md) · [📚 Índice](README.md) · [Próximo](enums.md) ➡️
+⬅️ [Anterior: Criptografia](criptografia.md) · [📚 Índice](README.md) · [Próximo: Enums](enums.md) ➡️

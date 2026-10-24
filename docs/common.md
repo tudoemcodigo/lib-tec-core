@@ -27,7 +27,7 @@
 | Namespace | Tipos públicos | Para que serve |
 |---|---|---|
 | `TEC.Core.Common.Guards` | `Guard` | Validar argumentos e falhar cedo com mensagem clara |
-| `TEC.Core.Common.Results` | `Result`, `Result<T>`, `Error`, `ErrorType`, `ErrorTypeExtensions` | Retornar sucesso ou falha sem exceção, com categoria de erro e status HTTP |
+| `TEC.Core.Common.Results` | `Result`, `Result<T>`, `Error`, `ErrorType`, `ErrorTypeExtensions`, `ResultTaskExtensions` | Retornar sucesso ou falha sem exceção, com categoria de erro e status HTTP |
 | `TEC.Core.Common.Serialization` | `JsonDefaults`, `JsonExtensions` | JSON padronizado (camelCase, enums estritos, nulos omitidos), com caminho compatível com Native AOT |
 | `TEC.Core.Common.Globalization` | `BrazilianCulture` | Cultura pt-BR que funciona mesmo sem ICU |
 
@@ -112,6 +112,7 @@ Representa o resultado de uma operação **sem lançar exceções**, com um ou m
 | `static Success<T>(T value)` / `static Failure<T>(params Error[] errors)` | `Result<T>` | Atalhos para `Result<T>.Success` / `Result<T>.Failure` |
 | `ToFailure()` | `Result` | Propaga os erros desta falha para um resultado sem valor |
 | `ToFailure<TOut>()` | `Result<TOut>` | Propaga os erros desta falha para outro tipo de valor |
+| `Match<TOut>(Func<TOut> onSuccess, Func<IReadOnlyList<Error>, TOut> onFailure)` / `Match(Action, Action<IReadOnlyList<Error>>)` | `TOut` / `void` | Executa uma das funções (ou ações) conforme o resultado |
 | `implicit operator Result(Error error)` | `Result` | Um `Error` pode ser retornado diretamente |
 
 **`Result<T>`** (além dos herdados)
@@ -122,7 +123,7 @@ Representa o resultado de uma operação **sem lançar exceções**, com um ou m
 | `static Success(T value)` | `Result<T>` | Sucesso com valor |
 | `static new Failure(params Error[] errors)` | `Result<T>` | Falha tipada |
 | `Map<TOut>(Func<T, TOut> mapper)` | `Result<TOut>` | Transforma o valor no sucesso; propaga os erros na falha |
-| `Match<TOut>(Func<T, TOut> onSuccess, Func<IReadOnlyList<Error>, TOut> onFailure)` | `TOut` | Executa uma das funções conforme o resultado |
+| `Match<TOut>(Func<T, TOut> onSuccess, Func<IReadOnlyList<Error>, TOut> onFailure)` / `Match(Action<T>, Action<IReadOnlyList<Error>>)` | `TOut` / `void` | Executa uma das funções (ou ações) conforme o resultado; `onSuccess` recebe o valor |
 | `implicit operator Result<T>(T value)` / `(Error error)` | `Result<T>` | Retorna valor ou erro diretamente |
 
 Regras de consistência: sucesso **não pode** ter erros e falha **deve** ter ao menos um; a lista de erros é copiada (alterações posteriores no array do chamador não afetam o resultado); itens nulos geram `ArgumentException`.
@@ -162,7 +163,7 @@ return ApiResponse<CustomerDto>.FromResult(result);            // 404 automatica
 | `Bind<TOut>(Func<T, Result<TOut>>)` / `Bind(Func<T, Result>)` | `Result<T>` | Encadeia uma operação que recebe o valor |
 | `BindAsync<TOut>(Func<T, Task<Result<TOut>>>)` / `BindAsync(Func<T, Task<Result>>)` | `Result<T>` | Igual, com operação assíncrona |
 | `Ensure(Func<T, bool>, Error)` | `Result<T>` | Mantém o sucesso só se o valor atender à condição |
-| `BindAsync` / `MapAsync` | `Task<Result<T>>` (`ResultTaskExtensions`) | Encadeiam direto sobre a tarefa, sem `await` intermediário |
+| `BindAsync` (com `Func<T, Result<TOut>>`, `Func<T, Task<Result<TOut>>>` ou `Func<T, Result>`) / `MapAsync(Func<T, TOut>)` | `Task<Result<T>>` (`ResultTaskExtensions`) | Encadeiam direto sobre a tarefa, sem `await` intermediário |
 
 Todos param na **primeira falha** (as operações seguintes não executam) e preservam **todos** os erros dela.
 
@@ -436,4 +437,4 @@ Não: o construtor é `private protected` para impedir subclasses com estado inv
 </details>
 
 ---
-⬅️ [Instalação](instalacao.md) · [📚 Índice](README.md) · [Domínio](dominio.md) ➡️
+⬅️ [Anterior: Instalação](instalacao.md) · [📚 Índice](README.md) · [Próximo: Domínio](dominio.md) ➡️
