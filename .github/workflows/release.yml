@@ -28,8 +28,9 @@ jobs:
       actions: read            # CodeQL
       checks: read             # portão ci-ok da execução mais recente
       pull-requests: read      # portão que bloqueia PRs abertos
-      security-events: write    # CodeQL
+      security-events: write   # CodeQL
       id-token: write          # teto exigido pelo dotnet-test.yml (o token só é emitido no job de integração com Azure)
+      attestations: write      # atestado SLSA de proveniência dos pacotes no job release
     with:
       version: ${{ inputs.versao }}
       solution: TEC.Core.slnx
