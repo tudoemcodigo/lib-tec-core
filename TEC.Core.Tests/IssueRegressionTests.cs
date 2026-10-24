@@ -93,7 +93,9 @@ public class IssueRegressionTests
         var prevCulture = CultureInfo.CurrentCulture;
         try
         {
-            CultureInfo.CurrentCulture = new CultureInfo("de-DE");
+            var customInvariantCulture = (CultureInfo)CultureInfo.InvariantCulture.Clone();
+            customInvariantCulture.DateTimeFormat.DateSeparator = ".";
+            CultureInfo.CurrentCulture = customInvariantCulture;
             var holiday = new Holiday(new DateOnly(2026, 1, 25), "Aniversário de São Paulo");
             string text = holiday.ToString();
 
