@@ -1,6 +1,6 @@
 # Instruções para agentes — TEC.Core
 
-Este arquivo complementa as instruções herdadas de `D:\Projetos\Componentes\AGENTS.md`. O TEC.Core é uma biblioteca de runtime e a fundação dos componentes TEC; suas APIs públicas e seus formatos persistidos são contratos para consumidores externos.
+Este arquivo complementa as instruções herdadas de `AGENT_BASE.md`. O TEC.Core é uma biblioteca de runtime e a fundação dos componentes TEC; suas APIs públicas e seus formatos persistidos são contratos para consumidores externos.
 
 ## Escopo e segurança de alterações
 
