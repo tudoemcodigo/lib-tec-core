@@ -1,7 +1,6 @@
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using TEC.Core.Common.Guards;
-using TEC.Core.Polyfills;
 using TEC.Core.Text.Codecs;
 
 namespace TEC.Core.Cryptography.Generators;
@@ -73,6 +72,6 @@ public static class SecureRandomGenerator
     public static string GenerateHex(int byteLength = 16)
     {
         Guard.InRange(byteLength, 1, 1024);
-        return EncodingCompat.ToHexLower(RandomNumberGenerator.GetBytes(byteLength));
+        return Convert.ToHexStringLower(RandomNumberGenerator.GetBytes(byteLength));
     }
 }

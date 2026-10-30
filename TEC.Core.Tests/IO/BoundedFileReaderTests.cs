@@ -110,6 +110,96 @@ public class BoundedFileReaderTests
         }
     }
 
+    // ---------- TryReadBytesAsync (leitura binária usada por DecryptFromFileAsync) ----------
+
+    [Test]
+    public async Task TryReadBytesAsync_at_limit_is_read_and_one_byte_above_is_refused()
+    {
+        byte[] content = [0x00, 0xFF, 0xC3, 0x28, .. Enumerable.Range(0, 96).Select(i => (byte)i)];   // binário, UTF-8 inválido
+        string atLimit = WriteTemp(content);
+        string above = WriteTemp([.. content, 0x01]);
+        try
+        {
+            var read = await BoundedFileReader.TryReadBytesAsync(atLimit, 100, CancellationToken.None);
+            await Assert.That(read).IsNotNull();
+            await Assert.That(read!.SequenceEqual(content)).IsTrue();
+            await Assert.That(await BoundedFileReader.TryReadBytesAsync(above, 100, CancellationToken.None)).IsNull();
+        }
+        finally
+        {
+            File.Delete(atLimit);
+            File.Delete(above);
+        }
+    }
+
+    [Test]
+    public async Task TryReadBytesAsync_empty_file_returns_empty_array()
+    {
+        string path = WriteTemp([]);
+        try
+        {
+            var read = await BoundedFileReader.TryReadBytesAsync(path, 10, CancellationToken.None);
+            await Assert.That(read).IsNotNull();
+            await Assert.That(read!.Length).IsEqualTo(0);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Test]
+    public async Task TryReadBytesAsync_large_file_grows_buffer_and_keeps_bom()
+    {
+        byte[] content = [0xEF, 0xBB, 0xBF, .. Enumerable.Range(0, 50_000).Select(i => (byte)(i * 31))];
+        string path = WriteTemp(content);
+        try
+        {
+            var read = await BoundedFileReader.TryReadBytesAsync(path, int.MaxValue, CancellationToken.None);
+            await Assert.That(read!.SequenceEqual(content)).IsTrue();   // binário: o BOM não é descartado
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Test]
+    public async Task TryReadBytesAsync_file_far_above_limit_is_refused()
+    {
+        string path = Path.Combine(Path.GetTempPath(), $"tec-core-{Guid.NewGuid():N}.bin");
+        try
+        {
+            await using (var stream = File.Create(path))
+                stream.SetLength(64L * 1024 * 1024);
+
+            await Assert.That(await BoundedFileReader.TryReadBytesAsync(path, 1024, CancellationToken.None)).IsNull();
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Test]
+    public async Task TryReadBytesAsync_invalid_arguments_and_cancellation()
+    {
+        string path = WriteTemp("abc"u8.ToArray());
+        try
+        {
+            await Assert.That(async () => await BoundedFileReader.TryReadBytesAsync("", 10, CancellationToken.None)).Throws<ArgumentException>();
+            await Assert.That(async () => await BoundedFileReader.TryReadBytesAsync(path, 0, CancellationToken.None)).Throws<ArgumentOutOfRangeException>();
+            await Assert.That(async () => await BoundedFileReader.TryReadBytesAsync(path, 10, new CancellationToken(canceled: true)))
+                .Throws<OperationCanceledException>();
+            await Assert.That(async () => await BoundedFileReader.TryReadBytesAsync(path + ".inexistente", 10, CancellationToken.None))
+                .Throws<FileNotFoundException>();
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
     private static string WriteTemp(byte[] bytes)
     {
         string path = Path.Combine(Path.GetTempPath(), $"tec-core-{Guid.NewGuid():N}.txt");

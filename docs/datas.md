@@ -78,7 +78,7 @@ Formatação em português, tempo relativo e interpretação de datas digitadas.
 | `ToRelativeTime(this DateTime date, DateTime reference)` | `string` | Igual, em relação a `reference` (mesmo fuso que `date`: ambas UTC ou ambas locais). |
 | `ToRelativeTime(this DateTime date, TimeProvider timeProvider)` | `string` | Igual, com "agora" vindo do relógio **injetado** (testável). |
 | `ToRelativeTimeFromBrasilia(this DateTime brasiliaTime, TimeProvider? timeProvider = null)` | `string` | Para horário de Brasília (`BrazilTimeZone.Now`, colunas gravadas em Brasília): compara com `BrazilTimeZone.GetNow(timeProvider)`, independente do fuso do servidor. `Utc`/`Local` são convertidos para Brasília antes. |
-| `TryParseDate(string? value, out DateOnly date)` | `bool` | Aceita `dd/MM/yyyy`, `d/M/yyyy`, `dd-MM-yyyy`, `dd.MM.yyyy`, `ddMMyyyy`, `yyyy-MM-dd`, `yyyyMMdd`. Espaços nas pontas são ignorados. Nunca lança. |
+| `TryParseDate(string? value, out DateOnly date)` | `bool` | Aceita `dd/MM/yyyy`, `d/M/yyyy`, `dd-MM-yyyy`, `dd.MM.yyyy`, `yyyy-MM-dd`, `yyyyMMdd` e `ddMMyyyy`. Oito dígitos sem separador são tentados primeiro como `yyyyMMdd` e, se não formarem data válida, como `ddMMyyyy` (veja a tabela de exemplos). Espaços nas pontas são ignorados. Nunca lança. |
 | `TryParseDateTime(string? value, out DateTime dateTime)` | `bool` | Aceita `dd/MM/yyyy HH:mm[:ss]`, `d/M/yyyy H:mm[:ss]`, `yyyy-MM-ddTHH:mm[:ss]`, `yyyy-MM-dd HH:mm:ss` **ou só a data** (qualquer formato de `TryParseDate`, hora 00:00). Nunca lança. |
 
 ```csharp
@@ -125,6 +125,9 @@ Faixas: minutos (< 60 min), horas (< 24 h), dias (< 30 d), meses (< 365 d, 30 di
 |---|---|
 | `TryParseDate("30/09/2026", out var x)` | `true`, `2026-09-30` |
 | `TryParseDate("20260930", out var x)` | `true`, `2026-09-30` |
+| `TryParseDate("20120101", out var x)` | `true`, `2012-01-01` (`yyyyMMdd`; antes da correção virava 20/12/0101) |
+| `TryParseDate("01012012", out var x)` | `true`, `2012-01-01` (como `yyyyMMdd` o mês seria 20, então vale `ddMMyyyy`) |
+| `TryParseDate("10111213", out var x)` | `true`, `1011-12-13`: válido nos dois formatos, `yyyyMMdd` vence. Só acontece com `ddMMyyyy` de ano entre 0100 e 1299 |
 | `TryParseDate("31/02/2026", out var x)` | `false` |
 | `TryParseDateTime("30/09/2026 14:35", out var x)` | `true`, `2026-09-30T14:35:00` |
 
@@ -995,6 +998,9 @@ Mensagens reais do código. 🔒 Nenhuma mensagem repete o valor recebido (que p
 
 > [!WARNING]
 > Os caminhos de `CsvHolidaySource`/`JsonHolidaySource` (e de `AddCsvFile`/`AddJsonFile`) não devem vir do usuário final (*path traversal*).
+
+> [!WARNING]
+> `HttpHolidaySource` (e `AddHttp`) não valida esquema, host nem endereço de destino, e o `HttpClient` segue redirecionamentos por padrão. A `requestUri` deve vir da configuração da aplicação, nunca de entrada do usuário (*SSRF*).
 
 > [!CAUTION]
 > Implementações próprias de `IHolidayProvider` são chamadas por calculadoras Singleton em paralelo: precisam ser thread-safe.

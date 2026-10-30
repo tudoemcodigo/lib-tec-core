@@ -8,7 +8,7 @@ namespace TEC.Core.LoadTests.Infrastructure;
 /// </summary>
 public static class LoadSettings
 {
-    /// <summary>Testes rápidos que rodam no CI a cada push.</summary>
+    /// <summary>Testes rápidos, rodados pelo performance.yml (manual), não pelo CI de push.</summary>
     public const string Ci = "Carga-CI";
 
     /// <summary>

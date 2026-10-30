@@ -25,6 +25,7 @@
 | [ADR-0011](0011-contrato-de-identidade-de-execucao-com-icurrentuser.md) | Abstração Pura de Identidade de Execução Desacoplada do ASP.NET Core | `Aceito` | `Security` |
 | [ADR-0012](0012-serializacao-json-estrita-imutavel-e-compativel-com-aot.md) | Serialização JSON Estrita, Imutável e Compatível com Native AOT | `Aceito` | `Common/Serialization` |
 | [ADR-0013](0013-leitura-delimitada-de-arquivos-sensiveis-com-boundedfilereader.md) | Leitura Delimitada de Arquivos de Segredos e Configuração com Zeragem de Buffer | `Aceito` | `IO` |
+| [ADR-0014](0014-alvo-unico-net10.md) | Alvo Único net10.0 | `Aceito` | Build e pacote |
 
 ---
 
@@ -32,7 +33,7 @@
 
 Todas as decisões registradas neste repositório seguem três pilares invioláveis:
 
-1. **Fundação Pura e Zero Acoplamento Externo:** O `TEC.Core` é a base da pirâmide de componentes TEC. Não possui dependências de frameworks pesados, ORMs, drivers de banco, nem ASP.NET Core MVC. Depende unicamente de `Microsoft.Extensions.DependencyInjection.Abstractions` e APIs nativas da BCL (.NET 8 e .NET 10 LTS).
+1. **Fundação Pura e Zero Acoplamento Externo:** O `TEC.Core` é a base da pirâmide de componentes TEC. Não possui dependências de frameworks pesados, ORMs, drivers de banco, nem ASP.NET Core MVC. Depende unicamente de `Microsoft.Extensions.DependencyInjection.Abstractions` e APIs nativas da BCL (.NET 10 LTS).
 2. **Segurança por Padrão (*Secure by Default*):** Recursos criptográficos autenticados, resistência ativa a ataques de temporização (*timing attacks*), proteção anti-injeção de fórmulas em CSV, mascaramento LGPD, sanitização de erros 500/502 e zeragem ativa de memória sensível (`ZeroMemory`).
 3. **Foco no Mercado e Regulamentação Brasileira:** Suporte nativo a particularidades fiscais e bancárias do Brasil (CNPJ alfanumérico, feriados ANBIMA/Bacen, horário de Brasília, formatação de moeda R$ e documentos).
 

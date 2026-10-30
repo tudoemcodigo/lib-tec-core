@@ -5,9 +5,10 @@ namespace TEC.Core.Dates.BusinessDays;
 /// As sobrecargas com <see cref="DateTime"/> preservam o horário e o <see cref="DateTimeKind"/>.
 /// </summary>
 /// <remarks>
-/// <see cref="DateTime"/> com <see cref="DateTimeKind.Utc"/> é avaliado na data de Brasília (ex.: sábado 02:00 UTC é
-/// sexta-feira 23:00 em Brasília, portanto dia útil); o resultado preserva o horário de Brasília e volta em UTC.
-/// <see cref="DateTimeKind.Local"/> e <see cref="DateTimeKind.Unspecified"/> usam a data como está.
+/// <see cref="DateTime"/> com <see cref="DateTimeKind.Utc"/> ou <see cref="DateTimeKind.Local"/> é um instante: é
+/// convertido para Brasília e avaliado nessa data (ex.: sábado 02:00 UTC é sexta-feira 23:00 em Brasília, portanto dia
+/// útil); o resultado preserva o horário de Brasília e volta no <see cref="DateTimeKind"/> original.
+/// <see cref="DateTimeKind.Unspecified"/> usa a data de calendário como está.
 /// </remarks>
 public interface IBusinessDayCalculator
 {

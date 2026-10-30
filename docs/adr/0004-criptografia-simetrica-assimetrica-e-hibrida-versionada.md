@@ -20,7 +20,7 @@ Aplicações corporativas necessitam de criptografia robusta para repouso e trâ
 
 ## 💡 Decisão
 
-Implementar componentes nativos de criptografia de padrão militar com autenticação de integridade (AEAD) e garantia de versionamento:
+Implementar componentes de criptografia com autenticação de integridade (AEAD) e byte de versão no formato, usando só as APIs da BCL:
 
 ### 1. Criptografia Simétrica ([`AesGcmCryptography`](../../TEC.Core/Cryptography/Symmetric/AesGcmCryptography.cs))
 - **Em Memória:** Formato `[versão 1 byte = 0x01][nonce 12 bytes][tag 16 bytes][dados cifrados]`. O byte de versão entra nos dados associados autenticados (AAD), impedindo adulterações externas no cabeçalho.
@@ -35,7 +35,7 @@ Implementar componentes nativos de criptografia de padrão militar com autentica
 
 ### 3. Criptografia Híbrida ([`HybridCryptography`](../../TEC.Core/Cryptography/Hybrid/HybridCryptography.cs))
 - Combina RSA (para troca segura da chave simétrica aleatória efêmera de 256 bits) com AES-GCM (para cifrar o payload sem restrição de tamanho).
-- O cabeçalho completo com o prefixo da chave cifrada é autenticado no AAD do AES-GCM.
+- No formato em memória (`Encrypt`, `EncryptToFileAsync`), o cabeçalho completo com o prefixo da chave cifrada é autenticado no AAD do AES-GCM. No formato em stream (`EncryptFileAsync`), o cabeçalho fica antes do conteúdo no formato de stream do AES-GCM e não entra no AAD: a integridade vem da chave AES, que só o RSA correto recupera, e dos blocos autenticados.
 - Suporte nativo a [`RsaKey`](../../TEC.Core/Cryptography/Asymmetric/RsaKey.cs) em todas as sobrecargas de memória, texto Base64 e arquivos (`EncryptFileAsync`, `DecryptFileAsync`, `EncryptToFileAsync`, `DecryptFromFileAsync`), viabilizando alta vazão de arquivos híbridos sem reinterpretar PEMs a cada operação.
 
 ### 4. Higienização de Memória (*ZeroMemory*)
@@ -44,9 +44,9 @@ Implementar componentes nativos de criptografia de padrão militar com autentica
 ## ⚖️ Consequências
 
 ### Positivas
-- **Segurança Criptográfica Extrema:** Proteção comprovada contra ataques de oráculo de padding, colisões de nonce e espionagem de memória pós-GC.
+- **Cifra autenticada:** AES-GCM detecta adulteração, o OAEP evita o oráculo de padding do PKCS#1 v1.5, a subchave por stream elimina a colisão de nonce entre arquivos e os buffers criados pela biblioteca são zerados (as `string` não podem ser).
 - **Transparência e Evolução:** Formatos binários com byte de versão permitem a inclusão futura de cifras pós-quânticas sem quebrar decifragem de registros antigos.
-- **Zero Dependências:** Utiliza as APIs criptográficas nativas da BCL do .NET (OpenSSL no Linux, CNG no Windows), 100% compatível com Native AOT.
+- **Zero Dependências:** Utiliza as APIs criptográficas nativas da BCL do .NET (OpenSSL no Linux, CNG no Windows), compatível com Native AOT.
 
 ### Negativas / Trade-offs
 - O tamanho dos dados cifrados é acrescido dos bytes de cabeçalho, nonce e tag de autenticação.

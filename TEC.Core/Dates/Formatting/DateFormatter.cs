@@ -20,8 +20,10 @@ public static class DateFormatter
 
     private static CultureInfo BrazilianCulture => Common.Globalization.BrazilianCulture.Instance;
 
+    // A ordem importa: o primeiro formato que casa vence. Os dois compactos de 8 dígitos se sobrepõem, e yyyyMMdd vem
+    // antes de ddMMyyyy: senão "20120101" seria lido como 20/12/0101. Ver TryParseDate.
     private static readonly string[] AcceptedDateFormats =
-        ["dd/MM/yyyy", "d/M/yyyy", "dd-MM-yyyy", "dd.MM.yyyy", "ddMMyyyy", "yyyy-MM-dd", "yyyyMMdd"];
+        ["dd/MM/yyyy", "d/M/yyyy", "dd-MM-yyyy", "dd.MM.yyyy", "yyyy-MM-dd", "yyyyMMdd", "ddMMyyyy"];
 
     private static readonly string[] AcceptedDateTimeFormats =
         ["dd/MM/yyyy HH:mm:ss", "dd/MM/yyyy HH:mm", "d/M/yyyy H:mm:ss", "d/M/yyyy H:mm", "yyyy-MM-ddTHH:mm:ss", "yyyy-MM-dd HH:mm:ss", "yyyy-MM-ddTHH:mm"];
@@ -160,8 +162,15 @@ public static class DateFormatter
     }
 
     /// <summary>
-    /// Interpreta data nos formatos dd/MM/yyyy, d/M/yyyy, dd-MM-yyyy, dd.MM.yyyy, ddMMyyyy, yyyy-MM-dd e yyyyMMdd.
+    /// Interpreta data nos formatos dd/MM/yyyy, d/M/yyyy, dd-MM-yyyy, dd.MM.yyyy, yyyy-MM-dd, yyyyMMdd e ddMMyyyy.
     /// </summary>
+    /// <remarks>
+    /// Oito dígitos sem separador são lidos primeiro como <c>yyyyMMdd</c> e, se isso não formar uma data válida, como
+    /// <c>ddMMyyyy</c>: "20120101" é 01/01/2012 e "01012012" também. Só há ambiguidade quando o texto forma data válida
+    /// nos dois formatos, o que exige um <c>ddMMyyyy</c> com ano entre 0100 e 1299 cujos dois primeiros dígitos vão de
+    /// 01 a 12 (ex.: "10111213" vira 13/12/1011, não 10/11/1213). Datas de 1300 em diante em <c>ddMMyyyy</c> nunca são
+    /// confundidas.
+    /// </remarks>
     public static bool TryParseDate(string? value, out DateOnly date) =>
         DateOnly.TryParseExact(value?.Trim(), AcceptedDateFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out date);
 

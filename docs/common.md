@@ -273,7 +273,7 @@ builder.Services.ConfigureHttpJsonOptions(o =>
 {
     o.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
     o.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-    // Só nomes definidos: o JsonStringEnumConverter do .NET 8 aceita "999" (número entre aspas) e combinações por vírgula
+    // Só nomes definidos: o JsonStringEnumConverter padrão pode aceitar "999" (número entre aspas) e combinações por vírgula
     o.SerializerOptions.Converters.Add(JsonDefaults.CreateEnumConverter<OrderStatus>());
 });
 ```

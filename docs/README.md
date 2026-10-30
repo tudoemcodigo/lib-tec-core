@@ -33,13 +33,13 @@
 | 10 | [📄 CSV](csv.md) | Como importar e exportar planilhas em streaming, com segurança | `CsvReader`, `CsvWriter`, `CsvOptions`, `[CsvColumn]`, `[CsvIgnore]`, `CsvException` |
 | 11 | [🏷️ Enums](enums.md) | Como obter descrições, listas para combos e converter texto | `EnumHelper`, `EnumExtensions`, `EnumItem<TEnum>` |
 | 12 | [🧩 Injeção de dependência](injecao-dependencia.md) | O que é registrado no container e como configurar | `AddTecCore`, `TecCoreOptions`, `AddBusinessDayCalculator` |
-| 13 | [⚡ Compatibilidade](compatibilidade.md) | O que muda entre .NET 8 e 10, Native AOT, containers, thread-safety e observabilidade | — |
+| 13 | [⚡ Compatibilidade](compatibilidade.md) | .NET 10, Native AOT, containers, thread-safety e observabilidade | — |
 | 14 | [🔀 Concorrência](concorrencia.md) | Como evitar execuções simultâneas da mesma operação cara (cache stampede) | `SingleFlight<TKey, TValue>` |
 | 15 | [🛡️ Segurança](seguranca.md) | O que o componente garante, o que é sua responsabilidade; identidade da operação | `ICurrentUser`, `PrincipalKind` |
 | 16 | [🧪 Testes](testes.md) | Categorias, como rodar local e no CI, variáveis `TEC_CARGA_*`, carga e benchmarks | — |
 | 17 | [🛠️ Desenvolvimento](desenvolvimento.md) | Como compilar, testar mudanças nos dependentes com o modo local (`-p:TecUseLocalProjects=true`), lock files, contribuição e publicação | — |
 | 18 | [🔎 Revisão técnica](revisao-tecnica.md) | Achados da revisão de segurança, bugs, implementação, organização e docs, com evidências, correções aplicadas e estado verificado em 2026-10-24 | — |
-| 19 | [🏛️ Decisões de arquitetura (ADRs)](adr/README.md) | Registros formais das decisões de arquitetura exclusivas do TEC.Core (ADR-0001 a ADR-0013) | ADR-0001 a ADR-0013 |
+| 19 | [🏛️ Decisões de arquitetura (ADRs)](adr/README.md) | Registros formais das decisões de arquitetura exclusivas do TEC.Core (ADR-0001 a ADR-0014) | ADR-0001 a ADR-0014 |
 
 Fora de `docs/`: [🧰 Samples](../samples/README.md) (API de exemplo e gerador de carga) · [⚙️ CI/CD](../.github/workflows/README.md) (workflows e publicação) · [📝 Changelog](../CHANGELOG.md).
 

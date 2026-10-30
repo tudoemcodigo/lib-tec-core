@@ -156,8 +156,7 @@ public class AppExceptionTests
         var constructors = typeof(RequestValidationException).GetConstructors();
         var acceptsNoArguments = constructors.Any(c => c.GetParameters().All(p => p.IsOptional
             || p.IsDefined(typeof(ParamArrayAttribute), false)
-            // Pelo nome: no net8.0 o compilador embute o próprio ParamCollectionAttribute no assembly
-            || p.GetCustomAttributes(false).Any(a => a.GetType().FullName == "System.Runtime.CompilerServices.ParamCollectionAttribute")));
+            || p.IsDefined(typeof(System.Runtime.CompilerServices.ParamCollectionAttribute), false)));
         await Assert.That(acceptsNoArguments).IsFalse();
 
         var single = new RequestValidationException(Error.Validation("A", "Erro A", "a"));

@@ -151,7 +151,7 @@ app.MapGet("/domains/order-status", () => EnumHelper.GetItems<OrderStatus>());
 
 ### Enums com [Flags]
 
-Em enums marcados com `[Flags]`, combinações por vírgula (`"Read, Write"`) são aceitas somente com bits definidos no enum. Em enums sem `[Flags]`, combinações são recusadas.
+Em enums marcados com `[Flags]`, combinações por vírgula (`"Read, Write"`) são aceitas somente com bits definidos no enum. O número também passa quando usa só bits definidos (`"3"` vira `Read | Write`), mesmo sem ser um membro nomeado. Em enums sem `[Flags]`, combinações são recusadas.
 
 ```csharp
 [Flags]
@@ -190,7 +190,7 @@ O módulo não tem opções. A ordem de prioridade dos atributos é fixa:
 ## 🛡️ Segurança
 
 > [!IMPORTANT]
-> 🔒 Valores numéricos só são aceitos se corresponderem a um membro **definido**. O `Enum.Parse` nativo aceitaria `"99"` e criaria um valor inválido que passaria despercebido por `switch` e validações.
+> 🔒 Valores numéricos só são aceitos se corresponderem a um membro **definido** (em enums `[Flags]`, também a combinações de bits definidos). O `Enum.Parse` nativo aceitaria `"99"` e criaria um valor inválido que passaria despercebido por `switch` e validações.
 
 > [!NOTE]
 > ✅ **Trimming/Native AOT:** compatível sem avisos. Os parâmetros `TEnum` (e o `Type enumType` da versão não genérica) são anotados com `[DynamicallyAccessedMembers(PublicFields)]`; os atributos `[Description]`/`[Display]` são lidos dos campos do enum, que o trimmer preserva. Em métodos genéricos seus que repassem `TEnum` para `EnumHelper`/`ToEnum<TEnum>`, propague a anotação.

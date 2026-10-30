@@ -96,6 +96,8 @@ Hash de senha:       PBKDF2-SHA256$<iterações>$<salt Base64>$<hash Base64>
 | AES-GCM em stream | 33 bytes de cabeçalho + 21 bytes por bloco de até 64 KB (200.000 bytes → 4 blocos → 200.117 bytes); stream vazio gera um único bloco final vazio |
 | Híbrida | `3 + tamanho da chave RSA em bytes + 29 + tamanho dos dados` (256 bytes de chave cifrada com RSA 2048) |
 
+Os arquivos gerados por `HybridCryptography.EncryptFileAsync` usam o mesmo cabeçalho (versão, tamanho e chave cifrada), mas o conteúdo depois dele está no **formato em stream** do AES-GCM, não no formato em memória. Por isso só `DecryptFileAsync` lê esses arquivos; `DecryptFromFileAsync` e `Decrypt` leem o formato em memória (o de `Encrypt` e `EncryptToFileAsync`). Nesse caminho de arquivo, o cabeçalho não entra como dado associado: a integridade vem da chave AES, que só o RSA correto recupera, e dos blocos autenticados.
+
 ---
 
 ## 🚀 Uso
@@ -120,7 +122,7 @@ Criptografia simétrica **autenticada** com AES-GCM: garante sigilo **e** integr
 | `EncryptFileAsync(string inputFilePath, string outputFilePath, byte[] / string key)` | `Task` | Cifra um arquivo do disco para outro em streaming, com escrita atômica via `.tmp`. |
 | `DecryptFileAsync(string inputFilePath, string outputFilePath, byte[] / string key)` | `Task` | Decifra um arquivo criptografado do disco para outro em streaming, com escrita atômica via `.tmp`. |
 | `EncryptToFileAsync(byte[] plainData, string outputFilePath, byte[] / string key)` | `Task` | Cifra dados em memória e grava o arquivo de destino de forma atômica. |
-| `DecryptFromFileAsync(string inputFilePath, byte[] / string key)` | `Task<byte[]>` | Lê um arquivo criptografado do disco e retorna os dados descriptografados em memória. |
+| `DecryptFromFileAsync(string inputFilePath, byte[] / string key, byte[]? associatedData = null, int maxBytes = DefaultMaxFileBytes)` | `Task<byte[]>` | Lê um arquivo criptografado do disco e retorna os dados descriptografados em memória. O arquivo inteiro vai para a memória, por isso há um limite: `maxBytes`, padrão `DefaultMaxFileBytes` (16 MiB). Acima dele, `InvalidDataException` sem ler o arquivo além do limite. Para arquivos grandes, use `DecryptFileAsync`. |
 
 Como funciona:
 
@@ -390,7 +392,7 @@ builder.Services.AddTecCore(options => options.RsaSignatureMode = RsaSignatureMo
 
 > `TEC.Core.Cryptography.Hybrid` · `sealed class` (implementa `IHybridCryptography`)
 
-Cifra **dados de qualquer tamanho** com uma chave pública RSA: gera uma chave AES aleatória, cifra os dados com AES-GCM e a chave AES com RSA-OAEP. O cabeçalho inteiro (versão, tamanho e chave AES cifrada) é usado como **dado associado** do AES-GCM, vinculando as partes: alterar qualquer byte invalida os dados.
+Cifra **dados de qualquer tamanho** com uma chave pública RSA: gera uma chave AES aleatória, cifra os dados com AES-GCM e a chave AES com RSA-OAEP. No formato em memória (`Encrypt`, `EncryptToFileAsync`), o cabeçalho inteiro (versão, tamanho e chave AES cifrada) é usado como **dado associado** do AES-GCM, vinculando as partes: alterar qualquer byte invalida os dados.
 
 ```mermaid
 flowchart LR
@@ -417,7 +419,7 @@ flowchart LR
 | `EncryptFileAsync(string inputFilePath, string outputFilePath, string / RsaKey)` | `Task` | Cifra um arquivo do disco para outro em streaming híbrido atômico. |
 | `DecryptFileAsync(string inputFilePath, string outputFilePath, string / RsaKey)` | `Task` | Decifra um arquivo criptografado do disco para outro em streaming híbrido atômico. |
 | `EncryptToFileAsync(byte[] data, string outputFilePath, string / RsaKey)` | `Task` | Cifra dados binários e grava o arquivo de destino de forma atômica. |
-| `DecryptFromFileAsync(string inputFilePath, string / RsaKey)` | `Task<byte[]>` | Lê um arquivo criptografado e retorna os bytes descriptografados. |
+| `DecryptFromFileAsync(string inputFilePath, string / RsaKey, int maxBytes = DefaultMaxFileBytes)` | `Task<byte[]>` | Lê um arquivo criptografado e retorna os bytes descriptografados. Limite de tamanho igual ao do AES-GCM: `maxBytes`, padrão 16 MiB, com `InvalidDataException` acima dele. Para arquivos grandes, use `EncryptFileAsync`/`DecryptFileAsync`. |
 
 ```csharp
 using TEC.Core.Cryptography.Hybrid;
@@ -534,7 +536,7 @@ PBKDF2-SHA256$600000$DwAbB/sXcpdsqzdJ5rU9jg==$gzWSoMtlYusmPYMR2G5nOlk4PAoJf2YZke
 └── algoritmo ┘└ iter ┘└──── salt (Base64) ───┘└──────────── hash (Base64) ─────────────────┘
 ```
 
-Os parâmetros ficam gravados junto do hash: é possível ajustar as iterações sem invalidar imediatamente senhas existentes (`NeedsRehash` + novo `Hash` no próximo login). Para limitar trabalho controlado por hashes armazenados, a leitura aceita de 100.000 a 2.000.000 iterações; o formato também valida até 256 caracteres, 4 partes, prefixo `PBKDF2-SHA256`, salt entre 16 e 64 bytes e hash de até 64 bytes. O tamanho esperado para a configuração atual é 32 bytes.
+Os parâmetros ficam gravados junto do hash: é possível ajustar as iterações sem invalidar imediatamente senhas existentes (`NeedsRehash` + novo `Hash` no próximo login). Para limitar trabalho controlado por hashes armazenados, a leitura aceita de 100.000 a 2.000.000 iterações; o formato também valida até 256 caracteres, 4 partes, prefixo `PBKDF2-SHA256`, salt entre 16 e 64 bytes e hash entre 16 e 64 bytes. O tamanho esperado para a configuração atual é 32 bytes.
 
 ```csharp
 using TEC.Core.Cryptography.Hashing;
@@ -678,14 +680,15 @@ builder.Services.AddTecCore(options =>
 |---|---|---|
 | `ArgumentNullException` | Qualquer argumento nulo (dados, chave, PEM, stream, implementação) | Valide a entrada antes da chamada |
 | `ArgumentException` | Chave AES `byte[]` com tamanho diferente de 16/24/32 bytes | *A chave AES deve ter 16, 24 ou 32 bytes.* |
-| `ArgumentException` | Chave AES em Base64 vazia ou inválida | *A chave deve estar em Base64.* |
+| `ArgumentException` | Chave AES em Base64 vazia ou só com espaços | Mensagem padrão do .NET para texto vazio ou só com espaços (não é a mensagem de Base64) |
+| `ArgumentException` | Chave AES em Base64 inválida | *A chave deve estar em Base64.* |
 | `ArgumentException` | Chave AES em Base64 com tamanho errado | *A chave AES deve ter 16, 24 ou 32 bytes (Base64 de 24, 32 ou 44 caracteres).* |
 | `ArgumentException` | Stream de entrada sem leitura / saída sem escrita / mesmo stream | *O stream de entrada não permite leitura.* · *O stream de saída não permite escrita.* · *Os streams de entrada e saída devem ser diferentes.* |
 | `ArgumentException` | `EncryptFileAsync`/`DecryptFileAsync` (AES-GCM e híbrida) com o mesmo caminho de entrada e saída | *Os caminhos de arquivo de entrada e saída devem ser diferentes.* |
 | `AuthenticationTagMismatchException` (`CryptographicException`) | AES-GCM com chave errada ou dados/AAD adulterados | Confira a chave e o contexto (`associatedData`) |
 | `CryptographicException` | AES-GCM: formato inválido, truncado ou Base64 do texto cifrado inválido | *Dados criptografados inválidos ou corrompidos.* |
 | `CryptographicException` | AES-GCM ou híbrida: byte de versão desconhecido | *Versão de formato dos dados criptografados não suportada: {v} (esperado 1). Formato não suportado: byte de versão ausente ou desconhecido.* |
-| `CryptographicException` | RSA ou híbrida: falha ao decifrar (chave errada, dado corrompido/truncado, Base64 inválido, adulteração) | Mensagem única e genérica: *Falha ao descriptografar os dados.* |
+| `CryptographicException` | RSA ou híbrida: falha ao decifrar (chave errada, dado corrompido/truncado, Base64 inválido, adulteração) | Mensagem única e genérica: *Falha ao descriptografar os dados.* Na `HybridCryptography.DecryptFileAsync`, uma falha nos blocos depois da chave AES vem do AES-GCM (*Dados criptografados inválidos ou corrompidos.* ou `AuthenticationTagMismatchException`) |
 | `ArgumentOutOfRangeException` | `RsaCryptography` com `signatureMode` fora do enum | No construtor |
 | `ArgumentOutOfRangeException` | `GenerateKeyPair` fora de 2048–8192 ou não múltiplo de 8 | *O tamanho da chave deve ser múltiplo de 8, entre 2048 e 8192 bits.* |
 | `ArgumentException` | `RsaCryptography.Encrypt` com dados acima do limite da chave | *Para esta chave o tamanho máximo é 190 bytes. Para dados maiores use HybridCryptography.* |
@@ -718,7 +721,7 @@ builder.Services.AddTecCore(options =>
 | Material sensível | Chaves e textos claros intermediários são zerados na memória; a chave privada fica fora de `ToString()` e do JSON |
 
 > [!IMPORTANT]
-> 🔒 Qualquer falha de decifragem RSA ou híbrida gera **a mesma** exceção genérica, sem revelar a causa (proteção contra ataques de oráculo de padding). Só a versão de formato desconhecida é informada explicitamente (o byte de versão não é secreto).
+> 🔒 Qualquer falha de decifragem RSA ou híbrida em memória gera **a mesma** exceção genérica, sem revelar a causa (proteção contra ataques de oráculo de padding). Só a versão de formato desconhecida é informada explicitamente (o byte de versão não é secreto). Em `HybridCryptography.DecryptFileAsync`, a falha do RSA segue a mesma regra; os blocos AES-GCM do arquivo geram as exceções do AES.
 
 > [!IMPORTANT]
 > 🔒 Com nonce aleatório (formato em memória), não cifre mais que 2³² mensagens com a mesma chave (recomendação do NIST). Faça rotação periódica.

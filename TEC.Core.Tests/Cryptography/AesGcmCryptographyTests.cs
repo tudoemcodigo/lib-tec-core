@@ -188,4 +188,90 @@ public class AesGcmCryptographyTests
                 Directory.Delete(tempDir, recursive: true);
         }
     }
+
+    // ---------- DecryptFromFileAsync: limite de tamanho (o arquivo inteiro vai para a memória) ----------
+
+    [Test]
+    public async Task DecryptFromFileAsync_AboveDefaultLimit_FailsClosedWithoutPathInMessage()
+    {
+        var key = _sut.GenerateKey();
+        var path = Path.Combine(Path.GetTempPath(), $"tec-aes-grande-{Guid.NewGuid():N}.bin");
+        try
+        {
+            // Tamanho informado pelo sistema de arquivos acima do limite: recusado antes de ler qualquer byte
+            await using (var stream = File.Create(path))
+                stream.SetLength(AesGcmCryptography.DefaultMaxFileBytes + 1L);
+
+            var exception = await Assert.That(async () => await _sut.DecryptFromFileAsync(path, key))
+                .ThrowsExactly<InvalidDataException>();
+            await Assert.That(exception!.Message).Contains(AesGcmCryptography.DefaultMaxFileBytes.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            await Assert.That(exception.Message).DoesNotContain(Path.GetFileName(path));
+            await Assert.That(exception.Message).DoesNotContain(Path.GetTempPath());
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Test]
+    public async Task DecryptFromFileAsync_LimitIsInclusive()
+    {
+        var key = _sut.GenerateKey();
+        var base64Key = Convert.ToBase64String(key);
+        var plain = RandomNumberGenerator.GetBytes(1000);
+        var path = Path.Combine(Path.GetTempPath(), $"tec-aes-limite-{Guid.NewGuid():N}.bin");
+        try
+        {
+            await _sut.EncryptToFileAsync(plain, path, key);
+            int size = (int)new FileInfo(path).Length;
+
+            var exact = await _sut.DecryptFromFileAsync(path, key, maxBytes: size);
+            await Assert.That(exact).IsEquivalentTo(plain, CollectionOrdering.Matching);
+
+            await Assert.That(async () => await _sut.DecryptFromFileAsync(path, key, maxBytes: size - 1))
+                .ThrowsExactly<InvalidDataException>();
+            // A sobrecarga com chave Base64 repassa o limite
+            await Assert.That(async () => await _sut.DecryptFromFileAsync(path, base64Key, maxBytes: size - 1))
+                .ThrowsExactly<InvalidDataException>();
+            await Assert.That(await _sut.DecryptFromFileAsync(path, base64Key, maxBytes: size)).IsEquivalentTo(plain, CollectionOrdering.Matching);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Test]
+    [Arguments(0)]
+    [Arguments(-1)]
+    [Arguments(int.MinValue)]
+    public async Task DecryptFromFileAsync_NonPositiveLimit_Throws(int maxBytes)
+    {
+        var key = _sut.GenerateKey();
+        await Assert.That(async () => await _sut.DecryptFromFileAsync("qualquer.bin", key, maxBytes: maxBytes))
+            .Throws<ArgumentOutOfRangeException>();
+        await Assert.That(async () => await _sut.DecryptFromFileAsync("qualquer.bin", Convert.ToBase64String(key), maxBytes: maxBytes))
+            .Throws<ArgumentOutOfRangeException>();
+    }
+
+    [Test]
+    public async Task DecryptFromFileAsync_TamperedFileWithinLimit_StillFailsAuthentication()
+    {
+        var key = _sut.GenerateKey();
+        var path = Path.Combine(Path.GetTempPath(), $"tec-aes-adulterado-{Guid.NewGuid():N}.bin");
+        try
+        {
+            await _sut.EncryptToFileAsync("conteúdo"u8.ToArray(), path, key);
+            var bytes = await File.ReadAllBytesAsync(path);
+            bytes[^1] ^= 0x01;
+            await File.WriteAllBytesAsync(path, bytes);
+
+            await Assert.That(async () => await _sut.DecryptFromFileAsync(path, key)).Throws<CryptographicException>();
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
 }

@@ -28,7 +28,7 @@
 | Arquivo | Nome no Actions | Chama | Função |
 |---|---|---|---|
 | [`ci.yml`](ci.yml) | **CI** | `dotnet-ci.yml@v1` | Validação de PR, merge queue, push na `main`, semanal e manual. No push na `main`, publica a prévia `<Version>-preview.N` |
-| [`release.yml`](release.yml) | **Publicar versão** | `dotnet-release.yml@v1` | Versão estável ou `-rc.N`: convenções, pack, unitários ×3 + cobertura e CodeQL, depois tag, Release e push no feed; requer `checks: read` e `pull-requests: read` para os portões de release |
+| [`release.yml`](release.yml) | **Publicar versão** | `dotnet-release.yml@v1` | Versão estável ou `-rc.N`: convenções, pack, unitários ×2 + cobertura e CodeQL, depois tag, Release e push no feed; requer `checks: read` e `pull-requests: read` para os portões de release |
 | [`performance.yml`](performance.yml) | **Performance** | `dotnet-test.yml@v1` e `dotnet-benchmark.yml@v1` | Só manual: carga rápida (`Carga-CI`) e/ou suítes pesadas; benchmarks opcionais |
 | [`../dependabot.yml`](../dependabot.yml) | — | — | Atualizações semanais de NuGet e actions (canônico) |
 | [`../zizmor.yml`](../zizmor.yml) | — | — | Auditoria de segurança dos workflows (canônico) |
@@ -53,14 +53,14 @@ em runner compartilhado é ruidoso e não pode bloquear PR nem versão.
 flowchart LR
     subgraph PR["🔀 Pull request / push na main → ci.yml"]
         direction LR
-        CH["changes<br/><sub>só docs? pula</sub>"] --> CV["convenções"] & BP["build + pack"] & U1["unit net10.0<br/>+ cobertura"] & U2["unit net8.0"] & U3["unit sem ICU"] & CQ["CodeQL"]
-        U1 & U2 & U3 --> RP["relatório"]
+        CH["changes<br/><sub>só docs? pula</sub>"] --> CV["convenções"] & BP["build + pack"] & U1["unit net10.0<br/>+ cobertura"] & U3["unit sem ICU"] & CQ["CodeQL"]
+        U1 & U3 --> RP["relatório"]
         CV & BP & RP & CQ --> OK["✅ ci-ok"]
         OK -- "só push na main" --> PV["📦 publicar-previa<br/><sub>X.Y.Z-preview.N</sub>"]
     end
     subgraph REL["⌨️ release.yml"]
         direction LR
-        V["validar versão<br/><sub>X.Y.Z ou X.Y.Z-rc.N</sub>"] --> G["convenções · pack ·<br/>unit ×3 + cobertura · CodeQL"] --> TAG["🏷️ tag + Release"] --> PUB["📦 GitHub Packages"]
+        V["validar versão<br/><sub>X.Y.Z ou X.Y.Z-rc.N</sub>"] --> G["convenções · pack ·<br/>unit ×2 + cobertura · CodeQL"] --> TAG["🏷️ tag + Release"] --> PUB["📦 GitHub Packages"]
     end
     subgraph PERF["⌨️ performance.yml (só manual)"]
         RA["rapida<br/><sub>Carga-CI</sub>"] ~~~ HV["pesados<br/><sub>Carga-Pesada +<br/>Seguranca-Pesada</sub>"] ~~~ BM["benchmarks<br/><sub>opcional</sub>"]
@@ -82,7 +82,7 @@ Tudo roda **em paralelo** depois do `changes`: a espera é a do job mais lento.
 | `schedule` segunda 06:00 UTC | `ci.yml` | CI completo: CodeQL com consultas novas, vulnerabilidades novas em dependências | ❌ |
 | `workflow_dispatch` | `ci.yml` | CI completo | ❌ |
 | `workflow_dispatch` (**Performance**) | `performance.yml` | Input `suite`: `pesadas` (padrão: `Carga-Pesada` + `Seguranca-Pesada`), `rapida` (`Carga-CI`) ou `todas`; parâmetros e, opcionalmente, benchmarks | ❌ |
-| **Publicar versão** (manual) | `release.yml` | Convenções, pack, unitários ×3 + cobertura e CodeQL → tag + Release → feed | ✅ `X.Y.Z` ou `-rc.N` |
+| **Publicar versão** (manual) | `release.yml` | Convenções, pack, unitários ×2 + cobertura e CodeQL → tag + Release → feed | ✅ `X.Y.Z` ou `-rc.N` |
 
 Os testes de carga não rodam no PR, no push nem na publicação: só no `performance.yml`, sob demanda. Um push novo no
 PR cancela a execução anterior (`concurrency` por ref); fora de PR, cada execução tem o próprio grupo, e nenhum push na `main` perde a prévia. O `release.yml` usa o grupo `publicar-versao` e nunca cancela uma execução em andamento; o `performance.yml` também não cancela.
@@ -97,7 +97,6 @@ PR cancela a execução anterior (`concurrency` por ref); fora de PR, cada execu
 | `conventions` (**Convenções**) | Compara os arquivos canônicos com o `template/` do tec-workflows e valida os csproj (sem `Version`, sem `PackageReference` para TEC.*) |
 | `build-pack` (**Build e pacote**) | `restore --locked-mode`, build **Release** da solução inteira (avisos como erro; benchmarks e samples continuam compilando) e `dotnet pack` com *package validation* |
 | `unit` (**Unitários**), `net10.0` | `TEC.Core.Tests` com cobertura |
-| `unit`, `net8.0` | `TEC.Core.Tests` no runtime .NET 8 |
 | `unit`, `net10.0-sem-icu` | `TEC.Core.Tests` (net10.0) com `DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1` |
 | `report` (**Relatório**) | Junta os `.trx` (aprovados, falhas, pulados com motivo) e a cobertura no resumo da execução |
 | `CodeQL` | C# `security-extended`; alertas de severidade ≥ 7,0 falham o job |
@@ -119,7 +118,7 @@ estável ou release candidate → **Publicar versão**:
    novas prévias: com a tag `v<Version>` existente, o CI da `main` valida tudo normalmente, mas não gera prévia. O
    TEC.Core pode ficar em `0.0.1` de propósito e ainda receber correções de build e documentação.
 
-O workflow valida a versão (formato `X.Y.Z` ou `X.Y.Z-rc.N`, igual à `<Version>`, tag inexistente e maior que a última versão lançada), roda os portões em paralelo (convenções, pack, unitários ×3 com relatório de cobertura, CodeQL), cria a tag `vX.Y.Z` e o Release (job `release`, no environment `publicacao`; notas automáticas, `.nupkg` e `.snupkg` anexados; `-rc.N` vira *pre-release*) e **só então** publica no feed (job `publicar`) com o `GITHUB_TOKEN`. Se algo falhar antes, nada é criado. Falha no push do feed: **Re-run failed jobs**. Testes de carga não são portão da publicação (rode o **Performance** antes, se quiser os números).
+O workflow valida a versão (formato `X.Y.Z` ou `X.Y.Z-rc.N`, igual à `<Version>`, tag inexistente e maior que a última versão lançada), roda os portões em paralelo (convenções, pack, unitários ×2 com relatório de cobertura, CodeQL), cria a tag `vX.Y.Z` e o Release (job `release`, no environment `publicacao`; notas automáticas, `.nupkg` e `.snupkg` anexados; `-rc.N` vira *pre-release*) e **só então** publica no feed (job `publicar`) com o `GITHUB_TOKEN`. Se algo falhar antes, nada é criado. Falha no push do feed: **Re-run failed jobs**. Testes de carga não são portão da publicação (rode o **Performance** antes, se quiser os números).
 
 | Mudança | Exemplo | Incremento |
 |---|---|---|
@@ -152,7 +151,7 @@ publicação: tempo de parede em runner compartilhado é ruidoso e não pode blo
 | `api_segundos` | `120` | `TEC_CARGA_API_SEGUNDOS` | Carga sustentada na API de exemplo |
 | `csv_linhas` | `2000000` | `TEC_CARGA_CSV_LINHAS` | Linhas do teste de volume de CSV |
 | `aes_mb` | `1024` | `TEC_CARGA_AES_MB` | Megabytes do AES-GCM em stream |
-| `benchmarks` | `false` | — | Roda também os benchmarks (`net8.0` × `net10.0`) |
+| `benchmarks` | `false` | — | Roda também os benchmarks (`net10.0`) |
 | `benchmark_filtro` | `*` | — | Filtro do BenchmarkDotNet (ex.: `*Csv*`) |
 
 | Job | Conteúdo | Limite |
@@ -190,7 +189,7 @@ Permissões dos workflows: padrão `contents: read`; `contents: write`/`packages
 
 | Ecossistema | Frequência | Agrupamento |
 |---|---|---|
-| NuGet | Semanal (segunda), cooldown de 7 dias | Um PR com todas as minor/patch; major em PRs separados. ASP.NET Core, EF Core e Roslyn ficam de fora e são atualizados à mão ([dependências pareadas](https://github.com/tudoemcodigo/tec-workflows/blob/main/docs/padroes.md#dependências-pareadas-atualizadas-à-mão)) |
+| NuGet | Semanal (segunda), cooldown de 7 dias | Um PR com todas as minor/patch; major em PRs separados. Roslyn fica de fora; de ASP.NET Core e EF Core, só a major é ignorada (minor/patch entram no PR agrupado). O que fica de fora é atualizado à mão ([dependências pareadas](https://github.com/tudoemcodigo/tec-workflows/blob/main/docs/padroes.md#dependências-pareadas-atualizadas-à-mão)) |
 | GitHub Actions | Semanal (segunda), cooldown de 7 dias | Workflows centrais num único PR |
 
 Actions de terceiros ficam fixadas por SHA no `tec-workflows`; os workflows da organização usam a tag `v1`. O `zizmor` audita os workflows (`uvx zizmor .`).

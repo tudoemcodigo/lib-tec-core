@@ -30,7 +30,7 @@ Construir os motores [`CsvReader`](../../TEC.Core/Csv/CsvReader.cs) e [`CsvWrite
 - **Limites Defensivos Rígidos contra DoS:**
   - `MaxFieldLength` (padrão 1 MB), `MaxColumns` (padrão 1.024) e `MaxRecordLength` (padrão 4 MB), impedindo que arquivos malformados esgotem os recursos do pod.
 - **UTF-8 Estrito na Leitura:**
-  - Decodificação UTF-8 com detecção estrita de bytes inválidos: arquivos em ANSI/Windows-1252 geram [`CsvException`](../../TEC.Core/Csv/CsvException.cs) imediata (indicando linha e coluna) em vez de corromper o banco silenciosamente.
+  - Decodificação UTF-8 com detecção estrita de bytes inválidos: arquivos em ANSI/Windows-1252 geram [`CsvException`](../../TEC.Core/Csv/CsvException.cs) imediata (com o número da linha do bloco lido) em vez de corromper o banco silenciosamente.
 - **Escrita Segura e Atômica em Arquivo Temporário:**
   - [`CsvWriter.WriteFileAsync`](../../TEC.Core/Csv/CsvWriter.cs) grava em arquivo `.tmp` único na mesma pasta e só o renomeia/substitui via `File.Move(..., overwrite: true)` no término bem-sucedido. Se a operação falhar ou for cancelada, o arquivo anterior permanece intacto.
 - **Ida e Volta Precisa para Datas:**
@@ -39,7 +39,7 @@ Construir os motores [`CsvReader`](../../TEC.Core/Csv/CsvReader.cs) e [`CsvWrite
 ## ⚖️ Consequências
 
 ### Positivas
-- **Imunidade a Injeção de Fórmulas:** Segurança total para os usuários finais ao abrirem exportações no Excel.
+- **Injeção de fórmulas:** textos livres que começam com caractere de fórmula saem neutralizados com `'`; números, datas, booleanos e enums não são alterados.
 - **Resiliência Operacional:** Processa arquivos com milhões de registros sob consumo constante de memória (baixo footprint de GC).
 - **Sem Dados Corrompidos:** Falhas de escrita não deixam arquivos pela metade; incompatibilidade de encoding é detectada na primeira linha inválida.
 

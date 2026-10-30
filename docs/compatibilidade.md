@@ -2,13 +2,13 @@
 
 # ⚡ Compatibilidade
 
-> Onde o TEC.Core roda e o que muda entre .NET 8 e .NET 10, com Native AOT, em containers enxutos e sob concorrência.
+> Onde o TEC.Core roda: .NET 10, Native AOT, containers enxutos e uso concorrente.
 
 ## 📑 Sumário
 
 - [🎯 Visão geral](#-visão-geral)
 - [🚀 Uso](#-uso)
-  - [.NET 8 e .NET 10](#net-8-e-net-10)
+  - [.NET 10](#net-10)
   - [Native AOT e trimming](#native-aot-e-trimming)
   - [Containers sem ICU ou sem tzdata](#containers-sem-icu-ou-sem-tzdata)
   - [Thread-safety](#thread-safety)
@@ -23,19 +23,18 @@
 
 ## 🎯 Visão geral
 
-| Item | .NET 8 (LTS) | .NET 10 (LTS) | Native AOT | Trimming |
-|---|:---:|:---:|:---:|:---:|
-| Pacote | ✅ `lib/net8.0` | ✅ `lib/net10.0` | ✅ `IsAotCompatible` | ✅ |
-| Criptografia, texto, datas, números, respostas, DI | ✅ | ✅ | ✅ sem reflexão | ✅ |
-| CSV e enums | ✅ | ✅ | ✅ tipos anotados com `[DynamicallyAccessedMembers]` | ✅ |
-| JSON com `JsonSerializerContext`/`JsonTypeInfo<T>` | ✅ | ✅ | ✅ | ✅ |
-| JSON por reflexão (`JsonDefaults.Options`, `ToJson<T>(bool)`, `FromJson<T>()`) | ✅ | ✅ | ⚠️ aviso IL2026/IL3050 | ⚠️ aviso |
-| `params IEnumerable<…>` com argumentos avulsos | ⚠️ C# 13+ | ✅ | — | — |
+| Item | .NET 10 (LTS) | Native AOT | Trimming |
+|---|:---:|:---:|:---:|
+| Pacote | ✅ `lib/net10.0` | ✅ `IsAotCompatible` | ✅ |
+| Criptografia, texto, datas, números, respostas, DI | ✅ | ✅ sem reflexão | ✅ |
+| CSV e enums | ✅ | ✅ tipos anotados com `[DynamicallyAccessedMembers]` | ✅ |
+| JSON com `JsonSerializerContext`/`JsonTypeInfo<T>` | ✅ | ✅ | ✅ |
+| JSON por reflexão (`JsonDefaults.Options`, `ToJson<T>(bool)`, `FromJson<T>()`) | ✅ | ⚠️ aviso IL2026/IL3050 | ⚠️ aviso |
 
 | Item | Suporte |
 |---|---|
-| Comportamento entre TFMs | Idêntico em `net8.0` e `net10.0`: os testes rodam nos dois runtimes |
-| Dependências por TFM | `Microsoft.Extensions.DependencyInjection.Abstractions` 8.0.x no `net8.0` e 10.0.x no `net10.0`: um app ASP.NET Core 8 continua com a versão 8.x do framework compartilhado |
+| Alvo | Só `net10.0`. Projetos em .NET 8 ou 9 não conseguem referenciar o pacote (`NU1202`) |
+| Dependência | `Microsoft.Extensions.DependencyInjection.Abstractions` 10.0.x, a mesma versão major do framework compartilhado do .NET 10 |
 | Sistemas | Windows, Linux e macOS (o CI roda em Linux; desenvolvimento em Windows) |
 | Nullable reference types | ✅ habilitado; avisos são erros no build do pacote |
 | `InvariantGlobalization=true` | ✅ cultura pt-BR própria como fallback |
@@ -46,10 +45,11 @@
 
 ## 🚀 Uso
 
-### .NET 8 e .NET 10
+### .NET 10
 
-- APIs do .NET 9+ usadas internamente (`Convert.ToHexStringLower`, `Convert.FromHexString(…, Span<byte>)`, `System.Buffers.Text.Base64Url`, `OverloadResolutionPriorityAttribute`) têm equivalentes internos no alvo `net8.0`, com testes que comparam os dois caminhos (`CompatibilityTests`). O codificador público [`Base64UrlEncoder`](texto.md#base64urlencoder) dá o mesmo resultado nos dois alvos.
-- Métodos com `params IEnumerable<…>` (ex.: `ApiResponse.ValidationError(...)`, `ApiResponse.BadRequest(...)`, `RequestValidationException(Error, params IEnumerable<Error>)`) aceitam argumentos avulsos só com **C# 13+**. Projetos `net8.0` usam C# 12 por padrão:
+O pacote tem um único alvo, `net10.0`, e usa direto as APIs do .NET 9 e 10 (`Convert.ToHexStringLower`, `Convert.FromHexString(…, Span<byte>)`, `System.Buffers.Text.Base64Url`, `OverloadResolutionPriorityAttribute`), sem polyfills nem `#if` por framework. A aplicação precisa mirar `net10.0` ou posterior.
+
+- Métodos com `params IEnumerable<…>` (ex.: `ApiResponse.ValidationError(...)`, `ApiResponse.BadRequest(...)`, `RequestValidationException(Error, params IEnumerable<Error>)`) aceitam argumentos avulsos com o C# padrão do .NET 10 (C# 14). Só um projeto que fixa `<LangVersion>` abaixo de 13 precisa passar uma coleção:
 
 ```csharp
 using TEC.Core.Responses;
@@ -57,14 +57,14 @@ using TEC.Core.Responses;
 var cpfError = new ApiError("CPF_INVALIDO", "CPF inválido.", "cpf");
 var emailError = new ApiError("EMAIL_OBRIGATORIO", "E-mail é obrigatório.", "email");
 
-// net8.0 com C# 12: passe uma coleção
-var response = ApiResponse.ValidationError([cpfError, emailError]);
+// Padrão do .NET 10: argumentos avulsos
+var response = ApiResponse.ValidationError(cpfError, emailError);
 
-// C# 13+ (net10.0, ou <LangVersion>13</LangVersion> com o SDK 9+): argumentos avulsos
-var same = ApiResponse.ValidationError(cpfError, emailError);
+// Com <LangVersion> abaixo de 13: passe uma coleção
+var same = ApiResponse.ValidationError([cpfError, emailError]);
 ```
 
-- `ToListAsync()` sobre `IAsyncEnumerable<T>` (ex.: leitura de CSV) é nativo no .NET 10; no .NET 8, use o pacote `System.Linq.AsyncEnumerable` ou um `await foreach`.
+- `ToListAsync()` sobre `IAsyncEnumerable<T>` (ex.: leitura de CSV) faz parte do .NET 10; não precisa de pacote extra.
 
 ### Native AOT e trimming
 
@@ -142,7 +142,7 @@ O TEC.Core **não emite traces, métricas nem logs** (sem `ActivitySource`/`Mete
 
 | Opção (no projeto da aplicação) | Padrão | Efeito |
 |---|---|---|
-| `<LangVersion>` | C# 12 em `net8.0`, C# 14 em `net10.0` | C# 13+ habilita argumentos avulsos em `params IEnumerable<…>` |
+| `<LangVersion>` | C# 14 em `net10.0` | Abaixo de 13, `params IEnumerable<…>` exige uma coleção |
 | `<InvariantGlobalization>` | `false` | `true` usa o fallback pt-BR do TEC.Core |
 | `<PublishAot>` / `<PublishTrimmed>` | `false` | Use as sobrecargas de JSON com contexto gerado para não ter avisos |
 
@@ -152,11 +152,11 @@ O TEC.Core **não emite traces, métricas nem logs** (sem `ActivitySource`/`Mete
 
 | Erro | Quando ocorre | O que fazer |
 |---|---|---|
-| `CS1503`/`CS1501` em `ValidationError(a, b)` | Projeto `net8.0` com C# 12 | Passe uma coleção (`[a, b]`) ou use `<LangVersion>13</LangVersion>`/`latest` com SDK 9+ |
-| `CS7036` em `ApiResponse.BadRequest("msg")` sem erros | Projeto `net8.0` com C# 12 (mesma causa: `params IEnumerable<…>` só vira opcional no C# 13+) | Passe `[]` como segundo argumento: `ApiResponse.BadRequest("msg", [])` |
+| `NU1202` ao adicionar o pacote | Projeto em `net8.0` ou `net9.0` | Migre o projeto para `net10.0` |
+| `CS1503`/`CS1501` em `ValidationError(a, b)` | Projeto com `<LangVersion>` fixado abaixo de 13 | Passe uma coleção (`[a, b]`) ou remova o `<LangVersion>` fixo |
+| `CS7036` em `ApiResponse.BadRequest("msg")` sem erros | Mesma causa: `params IEnumerable<…>` só vira opcional no C# 13+ | Passe `[]` como segundo argumento: `ApiResponse.BadRequest("msg", [])` |
 | `IL2026`/`IL3050` ao publicar com AOT | Uso de `JsonDefaults.Options` ou de `ToJson<T>(bool)`/`FromJson<T>()` | Gere um `JsonSerializerContext` e use as sobrecargas com contexto |
 | `CultureNotFoundException` | Código da aplicação chamando `CultureInfo.GetCultureInfo("pt-BR")` sem ICU | Use `BrazilianCulture.Instance` |
-| `ToListAsync` não encontrado | Projeto `net8.0` lendo CSV | Pacote `System.Linq.AsyncEnumerable` ou `await foreach` |
 
 ---
 
@@ -175,9 +175,9 @@ O TEC.Core **não emite traces, métricas nem logs** (sem `ActivitySource`/`Mete
 ## ❓ Perguntas frequentes
 
 <details>
-<summary>O comportamento é o mesmo em .NET 8 e .NET 10?</summary>
+<summary>Ainda dá para usar o TEC.Core num app .NET 8?</summary>
 
-Sim. Onde o .NET 10 tem uma API nova, o alvo `net8.0` usa um equivalente interno, e os testes comparam os dois caminhos.
+Não. Desde a primeira versão, a `0.0.1` (ver [CHANGELOG](../CHANGELOG.md)), o pacote só traz `lib/net10.0`. Um app .NET 8 precisa migrar para o .NET 10 antes de adotar o TEC.Core.
 
 </details>
 

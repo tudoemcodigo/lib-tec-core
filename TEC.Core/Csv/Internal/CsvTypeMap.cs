@@ -34,9 +34,13 @@ internal sealed class CsvTypeMap
         var nullability = new NullabilityInfoContext();
 
         // Attribute.IsDefined/GetCustomAttribute percorrem a cadeia de herança de propriedades sobrescritas (override);
-        // PropertyInfo.IsDefined ignora o parâmetro "inherit" e perderia o [CsvIgnore] declarado na classe base
+        // PropertyInfo.IsDefined ignora o parâmetro "inherit" e perderia o [CsvIgnore] declarado na classe base.
+        // Só entra propriedade com getter público: GetProperties(Public) devolve também "{ private get; set; }", e o
+        // getter privado seria invocado por reflexão na escrita, expondo no CSV um valor que o tipo escondeu. Na
+        // leitura, a coluna só recebe valor se o setter também for público (CsvColumn.CanWrite).
         Columns = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .Where(p => p.CanRead && p.GetIndexParameters().Length == 0 && !Attribute.IsDefined(p, typeof(CsvIgnoreAttribute), inherit: true))
+            .Where(p => p.GetMethod is { IsPublic: true } && p.GetIndexParameters().Length == 0
+                && !Attribute.IsDefined(p, typeof(CsvIgnoreAttribute), inherit: true))
             .Select(p => (Property: p, Attribute: (CsvColumnAttribute?)Attribute.GetCustomAttribute(p, typeof(CsvColumnAttribute), inherit: true)))
             .OrderBy(x => x.Attribute?.Order ?? int.MaxValue)
             .ThenBy(x => DeclarationOrder(x.Property))

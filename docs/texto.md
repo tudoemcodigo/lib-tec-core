@@ -375,7 +375,7 @@ bool same = "AÇÃO".EqualsIgnoreCaseAndAccents("acao");                       /
 
 > `TEC.Core.Text.Codecs` · `static class`
 
-Base64 seguro para URL **sem preenchimento** (RFC 4648 §5): alfabeto `A-Z a-z 0-9 - _`, sem `=`. Use para tokens, chaves de API, identificadores e hashes que trafegam em URL, cabeçalho HTTP ou nome de arquivo. O resultado é idêntico em `net8.0` e `net10.0` (no .NET 9+ delega para `System.Buffers.Text.Base64Url`). Trabalha com **bytes**; para texto, converta antes com `Encoding.UTF8`.
+Base64 seguro para URL **sem preenchimento** (RFC 4648 §5): alfabeto `A-Z a-z 0-9 - _`, sem `=`. Use para tokens, chaves de API, identificadores e hashes que trafegam em URL, cabeçalho HTTP ou nome de arquivo. A codificação delega para `System.Buffers.Text.Base64Url`. Trabalha com **bytes**; para texto, converta antes com `Encoding.UTF8`.
 
 | Membro | Retorno | Descrição |
 |---|---|---|

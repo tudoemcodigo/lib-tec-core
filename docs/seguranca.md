@@ -36,10 +36,10 @@ flowchart LR
 
 | Ameaça | Mitigação no TEC.Core |
 |---|---|
-| Adulteração de dados cifrados | Cifra autenticada (AES-GCM); na híbrida, cabeçalho vinculado como dado associado |
+| Adulteração de dados cifrados | Cifra autenticada (AES-GCM); na híbrida em memória, cabeçalho vinculado como dado associado |
 | Oráculo de padding / de erro | Mesma exceção genérica para qualquer falha de decifragem (RSA e híbrida) |
 | Enumeração de usuários pelo tempo | Verificação fictícia, com as iterações configuradas, para hash `null` ou malformado (`Pbkdf2PasswordHasher.Verify`); hash com menos iterações que as configuradas tem o custo completado até elas |
-| Negação de serviço (DoS) | Limites de chave RSA e PEM, de iterações PBKDF2, de campos/registros/colunas CSV, do JSON de feriados, de paginação e dos laços de dias úteis; `Regex` com `NonBacktracking` |
+| Negação de serviço (DoS) | Limites de chave RSA e PEM, de iterações PBKDF2, de campos/registros/colunas CSV, do JSON de feriados, de paginação e dos laços de dias úteis; arquivo lido inteiro em memória por `DecryptFromFileAsync` limitado a 16 MiB por padrão (`maxBytes`); `Regex` com `NonBacktracking` |
 | Injeção de fórmulas em planilhas | `CsvOptions.SanitizeFormulas` ligado por padrão |
 | Vazamento de detalhes internos ou dados pessoais | Erros 500/502 sem mensagem; `CsvException` sem o conteúdo do arquivo; `Guard.InRange` sem o valor recebido; `RsaKeyPair` sem chave privada em `ToString()`/JSON; nome de fonte HTTP sem credenciais |
 | Cadeia de suprimentos | NuGet Audit como erro, lock file, *package source mapping*, actions fixadas por SHA, CodeQL |
@@ -54,8 +54,8 @@ flowchart LR
 |---|---|
 | **AES-GCM** | Cifra autenticada; byte de versão de formato (autenticado); subchave por stream (HKDF-SHA256 + salt de 32 bytes); detecção de adulteração, reordenação, truncamento e dados extras; mensagens de erro genéricas |
 | **RSA** | OAEP-SHA256; assinatura PSS por padrão; chaves < 2048 bits recusadas (inclusive na importação); geração limitada a 8192 bits e importação a 16384 bits (PEM acima de 32 KB recusado antes da interpretação); verificação pelo rótulo PEM antes de operações com a chave privada |
-| **Híbrida** | Byte de versão de formato; cabeçalho (versão + chave cifrada) vinculado ao conteúdo (AAD); qualquer falha de decifragem gera uma única exceção genérica |
-| **Senhas** | PBKDF2-SHA256 com 600 mil iterações por padrão; salt aleatório de 16 bytes; comparação em tempo constante; verificação fictícia com as iterações configuradas para usuário inexistente e para hash antigo com menos iterações; normalização determinística (independente de ICU); hash armazenado validado (tamanho, iterações de 100 mil a 10 milhões, salt e hash de 16 a 64 bytes) contra registro adulterado |
+| **Híbrida** | Byte de versão de formato; no formato em memória, cabeçalho (versão + chave cifrada) vinculado ao conteúdo (AAD); qualquer falha de decifragem em memória gera uma única exceção genérica (na decifragem de arquivo, os blocos AES-GCM geram as exceções do AES) |
+| **Senhas** | PBKDF2-SHA256 com 600 mil iterações por padrão; salt aleatório de 16 bytes; comparação em tempo constante; verificação fictícia com as iterações configuradas para usuário inexistente e para hash antigo com menos iterações; normalização determinística (independente de ICU); hash armazenado validado (tamanho, iterações de 100 mil a 2 milhões, salt e hash de 16 a 64 bytes) contra registro adulterado |
 | **Material sensível** | Chaves e buffers de texto claro criados pela biblioteca são zerados (`CryptographicOperations.ZeroMemory`): cifragem, `BoundedFileReader`, bytes UTF-8 da senha no PBKDF2 e do texto em `HashHelper.ComputeHash(string)`/`ComputeHmac(string, string)`, e o `char[]` de trabalho de `SecureRandomGenerator.GeneratePassword`; cópias em `string` (a recebida do chamador, a devolvida ao chamador e a senha normalizada no PBKDF2) são imutáveis e não podem ser zeradas; a chave privada fica fora de `ToString()` e do JSON |
 | **Aleatoriedade** | Tudo usa `RandomNumberGenerator` (CSPRNG), inclusive `DocumentGenerator`; tokens em Base64Url ([`Base64UrlEncoder`](texto.md#base64urlencoder), decodificação estrita) |
 | **CSV** | Anti-injeção de fórmulas ligado por padrão (em qualquer valor de texto livre); `NaN`/infinito recusados na leitura; limites de campo, registro e colunas; modo estrito opcional; separador de milhar só em grupos válidos; erros sem o conteúdo do arquivo (salvo `IncludeRawValueInErrors`) |

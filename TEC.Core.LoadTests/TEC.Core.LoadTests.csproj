@@ -2,7 +2,7 @@
 
   <!--
     Testes de carga: concorrência, volume, soak (longa duração) e carga HTTP na API de exemplo.
-    Os testes rápidos rodam no CI a cada push; os pesados têm [Explicit] e só rodam quando selecionados por filtro
+    Nenhum roda no CI de push: todos rodam pelo performance.yml, manual; os pesados têm [Explicit] e só rodam quando selecionados por filtro
     (veja docs/testes.md). Framework, lock file e auditoria de pacotes em ../Directory.Build.props.
   -->
   <PropertyGroup>

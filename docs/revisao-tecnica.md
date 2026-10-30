@@ -417,7 +417,10 @@ Reprodução com relógio cujo fuso local é UTC: `BrazilTimeZone.GetNow(clock).
 
 **Severidade:** Baixa · **Categoria:** organização / versões de pacotes
 
-**Status:** ✅ **Corrigido.** `Directory.Packages.props`: `Microsoft.Extensions.DependencyInjection(.Abstractions)` 8.0.1/8.0.2 no `net8.0` e 10.0.12 no `net10.0`, com `Condition` por TFM; lock files regenerados por `dotnet restore --force-evaluate` (nuget.org; o `tec-interno` não foi necessário). Teste: `CompatibilityTests.DependencyInjectionAbstractions_MatchesTheRuntimeMajorVersion` (falhava no `net8.0`: 10). Pendente fora deste repositório: o `dependabot.yml` é canônico do `tec-workflows` e ainda não ignora `Microsoft.Extensions.DependencyInjection*`; sem isso, o Dependabot pode propor 10.x no bloco do `net8.0`.
+> [!NOTE]
+> Superado em 2026-10-29: o alvo `net8.0` foi removido ([ADR-0014](adr/0014-alvo-unico-net10.md)) e a dependência ficou só em 10.0.x. O registro abaixo descreve o estado da época.
+
+**Status:** ✅ **Corrigido.** `Directory.Packages.props`: `Microsoft.Extensions.DependencyInjection(.Abstractions)` 8.0.1/8.0.2 no `net8.0` e 10.0.12 no `net10.0`, com `Condition` por TFM; lock files regenerados por `dotnet restore --force-evaluate` (nuget.org; o `tec-interno` não foi necessário). Teste: `CompatibilityTests.DependencyInjectionAbstractions_MatchesTheRuntimeMajorVersion` (falhava no `net8.0`: 10). O `dependabot.yml` canônico (vindo do `tec-workflows`) já ignora as versões major de `Microsoft.Extensions.DependencyInjection*` e de `Microsoft.Extensions.*.Abstractions`, o que evita uma 10.x no bloco do `net8.0`.
 
 **Problema.** `Microsoft.Extensions.DependencyInjection.Abstractions` é referenciado em 10.0.12 para os dois alvos (o lock do `net8.0` resolve 10.0.12). Um app ASP.NET Core 8 que usa o TEC.Core passa a carregar a Abstractions 10.x no lugar da do framework compartilhado 8.x.
 
@@ -534,10 +537,10 @@ Arquivos de código alterados: `Threading/SingleFlight.cs`; `Csv/CsvReader.cs`, 
 
 Decisões a revisar:
 
-- **R02, `DateTime` Local/Unspecified continua em `G`** na escrita (sem frações de segundo), para não piorar a abertura no Excel; só instantes inequívocos (`DateTimeOffset`, `Kind = Utc`) passaram a `O`. A leitura de `DateTimeOffset` sem offset continua assumindo o fuso do servidor.
+- **R02, `DateTime` Local/Unspecified continua em `G`** na escrita (sem frações de segundo), para não piorar a abertura no Excel; só instantes inequívocos (`DateTimeOffset`, `Kind = Utc`) passaram a `O`. A leitura de `DateTimeOffset` sem offset passou a assumir UTC (`DateTimeStyles.AssumeUniversal`), igual em qualquer servidor.
 - **R03, UTF-8 estrito para qualquer UTF-8 configurado**, não só o padrão: quem configurou `new UTF8Encoding(false)` também passa a receber erro em arquivo inválido. Não há opção para voltar ao modo tolerante.
 - **R04 usa um gancho interno do `CsvReader`** (`ReadValidatedAsync`) para manter linha e coluna no erro; não foi exposto como API pública.
-- **R11 depende do `tec-workflows`**: o `dependabot.yml` canônico precisa ignorar `Microsoft.Extensions.DependencyInjection*` (como já faz com ASP.NET Core/EF Core), senão o Dependabot pode propor 10.x no bloco do `net8.0`.
+- **R11 depende do `tec-workflows`**: o `dependabot.yml` canônico precisa ignorar as versões major de `Microsoft.Extensions.DependencyInjection*`, senão o Dependabot pode propor 10.x no bloco do `net8.0`. O arquivo atual já tem essa regra.
 
 ---
 

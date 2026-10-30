@@ -14,11 +14,6 @@
     <PackageReference Include="FsCheck" />
   </ItemGroup>
 
-  <!-- ToListAsync (System.Linq.AsyncEnumerable) faz parte do .NET 10; no .NET 8 vem do pacote -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
-    <PackageReference Include="System.Linq.AsyncEnumerable" />
-  </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\TEC.Core\TEC.Core.csproj" />
   </ItemGroup>

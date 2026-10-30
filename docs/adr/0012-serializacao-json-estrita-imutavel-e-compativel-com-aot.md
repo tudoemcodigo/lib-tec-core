@@ -23,7 +23,7 @@ Padronizar a serialização via [`JsonDefaults`](../../TEC.Core/Common/Serializa
 
 ### Diretrizes de Projeto:
 - **Imutabilidade Absoluta:**
-  - As instâncias estáticas `JsonDefaults.Options` e `JsonDefaults.IndentedOptions` são congeladas em tempo de inicialização via `.MakeReadOnly()`. Qualquer tentativa de modificação em tempo de execução lança `InvalidOperationException`.
+  - As instâncias estáticas `JsonDefaults.Options` e `JsonDefaults.IndentedOptions` são congeladas na primeira utilização via `.MakeReadOnly()`. Qualquer tentativa de modificação em tempo de execução lança `InvalidOperationException`.
 - **Nomenclatura e Valores Nulos:**
   - Formato camelCase (`PropertyNamingPolicy = JsonNamingPolicy.CamelCase`).
   - Omissão de valores nulos na escrita (`DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull`), economizando largura de banda em payloads de rede.
@@ -40,7 +40,7 @@ Padronizar a serialização via [`JsonDefaults`](../../TEC.Core/Common/Serializa
 ### Positivas
 - **JSONs Legíveis e Seguros:** Acentos brasileiros são preservados em logs e contratos sem introduzir vulnerabilidades XSS.
 - **Integridade de Domínio:** Bloqueio imediato de inteiros fora do enum em contratos de entrada de APIs.
-- **Zero Surpresas:** Configurações globais imutáveis eliminam efeitos colaterais entre diferentes bibliotecas do processo.
+- **Configuração global imutável:** nenhum código do processo altera as opções padrão por engano.
 
 ### Negativas / Trade-offs
 - Para ambientes compilados com Native AOT é mandatório declarar um `JsonSerializerContext` com source generators em vez de utilizar as sobrecargas baseadas em reflexão.

@@ -153,7 +153,7 @@ throw new RequestValidationException(
 ```
 
 > [!WARNING]
-> Em projetos `net8.0` com C# 12, passe os erros adicionais como coleção (`[error2, error3]`) ou use C# 13+ (`params IEnumerable<…>`). Veja [Compatibilidade](compatibilidade.md).
+> Em projeto que fixa `<LangVersion>` abaixo de 13, passe os erros adicionais como coleção (`[error2, error3]`): argumentos avulsos em `params IEnumerable<…>` exigem C# 13+. Veja [Compatibilidade](compatibilidade.md).
 
 ### UnauthenticatedException
 

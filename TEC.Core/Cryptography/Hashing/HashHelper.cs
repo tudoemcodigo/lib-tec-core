@@ -1,7 +1,7 @@
+using System.Buffers;
 using System.Security.Cryptography;
 using System.Text;
 using TEC.Core.Common.Guards;
-using TEC.Core.Polyfills;
 
 namespace TEC.Core.Cryptography.Hashing;
 
@@ -33,7 +33,7 @@ public static class HashHelper
         var bytes = Encoding.UTF8.GetBytes(text);
         try
         {
-            return EncodingCompat.ToHexLower(ComputeHash(bytes, algorithm));
+            return Convert.ToHexStringLower(ComputeHash(bytes, algorithm));
         }
         finally
         {
@@ -55,7 +55,7 @@ public static class HashHelper
             HashAlgorithmType.Sha512 => await SHA512.HashDataAsync(stream, cancellationToken).ConfigureAwait(false),
             _ => throw new ArgumentOutOfRangeException(nameof(algorithm))
         };
-        return EncodingCompat.ToHexLower(hash);
+        return Convert.ToHexStringLower(hash);
     }
 
     /// <summary>Calcula o hash de um arquivo.</summary>
@@ -97,7 +97,7 @@ public static class HashHelper
         var textBytes = Encoding.UTF8.GetBytes(text);
         try
         {
-            return EncodingCompat.ToHexLower(ComputeHmac(textBytes, keyBytes, algorithm));
+            return Convert.ToHexStringLower(ComputeHmac(textBytes, keyBytes, algorithm));
         }
         finally
         {
@@ -143,6 +143,15 @@ public static class HashHelper
     private static bool TryDecodeHex(string? hex, out byte[] bytes)
     {
         bytes = [];
-        return hex is not null && EncodingCompat.TryFromHex(hex, out bytes);
+        if (hex is null || hex.Length % 2 != 0)
+            return false;
+
+        // Só 0-9/a-f/A-F: espaços, prefixo 0x e dígitos não ASCII são recusados
+        var buffer = new byte[hex.Length / 2];
+        if (Convert.FromHexString(hex, buffer, out _, out _) != OperationStatus.Done)
+            return false;
+
+        bytes = buffer;
+        return true;
     }
 }

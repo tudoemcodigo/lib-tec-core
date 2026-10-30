@@ -38,9 +38,9 @@ Adotar o [`Pbkdf2PasswordHasher`](../../TEC.Core/Cryptography/Hashing/Pbkdf2Pass
 ## ⚖️ Consequências
 
 ### Positivas
-- **Imunidade a Ataques de Temporização:** Elimina completamente o vetor de enumeração de logins por medição de latência.
+- **Enumeração de logins por tempo de resposta:** usuário inexistente, hash malformado e hash com menos iterações que as configuradas custam as iterações configuradas. Senha vazia ou acima de `MaxPasswordLength` retorna `false` sem derivação, mas isso não revela se o usuário existe.
 - **Portabilidade Total:** Funciona com exatidão em containers Alpine/Debian sem bibliotecas ICU instaladas.
-- **Independência de Pacotes Nativos:** Não requer bibliotecas C nativas (como Argon2 ou bcrypt externos), operando de forma 100% gerenciada e compatível com Native AOT.
+- **Independência de Pacotes Nativos:** Não requer bibliotecas C nativas (como Argon2 ou bcrypt externos), operando só com código gerenciado e compatível com Native AOT.
 
 ### Negativas / Trade-offs
 - PBKDF2 tem custo de memória menor que Argon2id contra ataques acelerados por ASIC/GPU; porém, com 600.000 iterações atinge conformidade plena com NIST SP 800-63B e OWASP.

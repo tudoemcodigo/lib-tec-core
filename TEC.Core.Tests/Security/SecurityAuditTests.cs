@@ -31,7 +31,7 @@ public class SecurityAuditTests
     // ---------- JSON: enums ----------
 
     [Test]
-    [Arguments("\"999\"")]      // número entre aspas (aceito pelo conversor do .NET 8)
+    [Arguments("\"999\"")]      // número entre aspas (aceito por versões do conversor padrão)
     [Arguments("\"1\"")]
     [Arguments("\"-1\"")]
     [Arguments("\"active, blocked\"")]   // combinação em enum sem [Flags]: viraria 3, fora do enum

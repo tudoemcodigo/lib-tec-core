@@ -12,7 +12,7 @@ Este arquivo complementa as instruções herdadas de `AGENT_BASE.md`. O TEC.Core
 
 ## Mapa da implementação
 
-- `TEC.Core/`: biblioteca multi-target (`net8.0` e `net10.0`), sem acesso próprio a banco, rede ou telemetria.
+- `TEC.Core/`: biblioteca com alvo único `net10.0`, sem acesso próprio a banco, rede ou telemetria.
   - `Common/`: guards, `Result`/`Error`, JSON estrito e cultura pt-BR.
   - `Cryptography/`: AES-GCM versionado, RSA, criptografia híbrida, PBKDF2, hashes e geração aleatória.
   - `Csv/`: leitura/escrita em streaming, conversão tipada, limites e proteção contra injeção de fórmulas.
@@ -24,13 +24,13 @@ Este arquivo complementa as instruções herdadas de `AGENT_BASE.md`. O TEC.Core
 - `TEC.Core.LoadTests/`: carga rápida e suítes de carga longa.
 - `TEC.Core.Benchmarks/`: medições BenchmarkDotNet.
 - `samples/`: API demonstrativa e gerador de carga; não são pacotes publicáveis.
-- `build/`: props/targets compartilhados de compilação e polyfills necessários ao `net8.0`.
+- `build/`: props/targets compartilhados de compilação (canônicos, vindos do `tec-workflows`).
 - `docs/adr/`: decisões arquiteturais; `docs/`: guias por API, segurança, compatibilidade, testes e desenvolvimento.
 
 ## Contratos relevantes
 
 - `Directory.Build.props` é a fonte única de versão do pacote. A versão inicial é `0.0.1`; não introduza versões nos `.csproj`.
-- `Directory.Packages.props` pode declarar versões distintas por TFM para `Microsoft.Extensions.*`; condições por TFM são intencionais para manter compatibilidade com os frameworks compartilhados.
+- `Directory.Packages.props` declara `Microsoft.Extensions.*` na mesma versão major do .NET do alvo (10.0.x), para não impor ao app uma versão diferente da do framework compartilhado. Não reintroduza alvos nem condições por TFM sem decisão registrada.
 - Dependências TEC.* são declaradas com `<TecReference Include="..." />`, não com `PackageReference` direto.
 - `DomainEntity<TId>` deve manter `Equals` e `GetHashCode` compatíveis durante a transição de entidade transiente para persistida e com proxies de ORM.
 - Hashes de senha, envelopes criptográficos e serialização são formatos versionados: qualquer mudança requer análise de migração antes da implementação.

@@ -23,7 +23,7 @@ public sealed class TecCoreOptions
     public CsvOptions Csv { get; set; } = CsvOptions.Default;
 
     /// <summary>
-    /// Iterações do PBKDF2 do <see cref="Pbkdf2PasswordHasher"/> (100.000 a 10.000.000).
+    /// Iterações do PBKDF2 do <see cref="Pbkdf2PasswordHasher"/> (100.000 a 2.000.000; fora disso, <c>AddTecCore</c> lança <see cref="ArgumentOutOfRangeException"/>).
     /// Padrão: <see cref="Pbkdf2PasswordHasher.DefaultIterations"/> (recomendação OWASP).
     /// </summary>
     public int PasswordHashIterations { get; set; } = Pbkdf2PasswordHasher.DefaultIterations;

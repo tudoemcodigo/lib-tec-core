@@ -39,8 +39,8 @@ Implementar validadores e formatadores de alta performance no namespace `TEC.Cor
 ## ⚖️ Consequências
 
 ### Positivas
-- **Prontidão Fiscal e Mercadológica:** Aplicações construídas com `TEC.Core` já nascem 100% preparadas para emitir, receber e processar notas fiscais e cadastros com o novo CNPJ alfanumérico.
-- **Resiliência a Negação de Serviço:** Imunidade comprovada contra ataques de ReDoS e exaustão de heap via `NonBacktracking`.
+- **CNPJ alfanumérico:** validação, formatação, remoção de máscara e geração aceitam o novo formato.
+- **Negação de serviço:** as regex de e-mail e de texto usam `NonBacktracking` (tempo linear), e o tamanho da entrada é conferido antes de alocar.
 - **Confiabilidade:** Geradores randômicos de documentos válidos ([`DocumentGenerator`](../../TEC.Core/Text/Generation/DocumentGenerator.cs)) para ambientes de testes e seed de dados.
 
 ### Negativas / Trade-offs

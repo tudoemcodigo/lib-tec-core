@@ -26,7 +26,7 @@ Criar um motor completo e desacoplado de cálculo de datas brasileiras:
 - **Sem Banco nem Arquivo:** Calcula datas fixas e móveis em memória para qualquer ano gregoriano.
 - **Algoritmo de Meeus/Jones/Butcher:** Cálculo exato da Páscoa e dedução automática dos dias móveis (Carnaval: Páscoa -48 e -47; Paixão de Cristo: Páscoa -2; Corpus Christi: Páscoa +60).
 - **Vigência Histórica:** Incorporação de 12/10 apenas a partir de 1980 e de 20/11 apenas a partir de 2024.
-- **Cache Thread-Safe:** Cache estático (`ConcurrentDictionary`) para anos entre 1900 e 2200 para acesso em $O(1)$.
+- **Cache Thread-Safe:** cache por instância (`ConcurrentDictionary`) para anos entre 1900 e 2200, com acesso em $O(1)$ por ano.
 
 ### 2. Calculadora de Dias Úteis ([`BusinessDayCalculator`](../../TEC.Core/Dates/BusinessDays/BusinessDayCalculator.cs))
 - Cálculo bidirecional de dias úteis (`AddBusinessDays`, `NextBusinessDay`, `PreviousBusinessDay`, `NextOrSameBusinessDay`).
@@ -42,9 +42,9 @@ Criar um motor completo e desacoplado de cálculo de datas brasileiras:
 ## ⚖️ Consequências
 
 ### Positivas
-- **Acurácia Fiscal e Financeira:** Prazos, SLA e vencimentos bancários 100% aderentes à regulamentação nacional.
-- **Resiliência em Nuvem:** Roda perfeitamente em qualquer container Linux (inclusive Alpine) sem exigir pacotes adicionais no Dockerfile.
-- **Testabilidade Total:** Eliminação do acoplamento a `DateTime.Now` mediante o uso de `TimeProvider`.
+- **Calendário bancário:** prazos e vencimentos seguem o calendário de dias não úteis da ANBIMA/FEBRABAN (com Carnaval e Corpus Christi desligáveis).
+- **Containers enxutos:** roda em imagens Linux sem `tzdata` (inclusive Alpine) sem pacotes adicionais no Dockerfile.
+- **Testabilidade:** as APIs de "agora" e "hoje" aceitam `TimeProvider`, sem depender de `DateTime.Now`.
 
 ### Negativas / Trade-offs
 - Para calendários municipais e estaduais específicos, é necessário alimentar o [`HolidayCalendar`](../../TEC.Core/Dates/Holidays/HolidayCalendar.cs) via fontes externas (CSV, JSON, Banco ou BrasilAPI).

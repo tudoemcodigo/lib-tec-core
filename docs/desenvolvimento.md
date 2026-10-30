@@ -25,14 +25,13 @@
 
 | Item | Valor |
 |---|---|
-| SDK | `global.json`: `10.0.401` (`rollForward: latestPatch`), com o Microsoft.Testing.Platform |
-| Runtimes extras | .NET 8 e ASP.NET Core 8 (testes no alvo `net8.0`) |
+| SDK | `global.json`: `10.0.402` (`rollForward: latestPatch`), com o Microsoft.Testing.Platform |
 | Solução | `TEC.Core.slnx` |
 | Versão | Única, em `Directory.Build.props` (`<Version>0.0.1</Version>`); nunca no csproj |
 | Build compartilhado | `build/Tec.Build.props` e `build/Tec.Build.targets` (canônicos, vindos do [tec-workflows](https://github.com/tudoemcodigo/tec-workflows)) |
 | Dependências de terceiros | Versões só em `Directory.Packages.props` (Central Package Management) |
 
-Os componentes ficam lado a lado em `D:\Projetos\Componentes\TEC.*`. O TEC.Core é a base: **não referencia nenhum outro componente** (compila sem o feed `tec-interno`), mas é referenciado por todos (exceto o TEC.Observability) via `<TecReference>`. Nos dependentes, o padrão, na máquina e no CI, é o pacote publicado do TEC.Core; o projeto vizinho só entra sob demanda:
+Os componentes ficam lado a lado em `D:\Projetos\Componentes\TEC.*`. O TEC.Core é a base: **não referencia nenhum outro componente** (compila sem o feed `tec-interno`), mas é referenciado pelo TEC.Cqrs, TEC.Http, TEC.Messaging, TEC.ORM, TEC.Security e TEC.Vault via `<TecReference>`. Nos dependentes, o padrão, na máquina e no CI, é o pacote publicado do TEC.Core; o projeto vizinho só entra sob demanda:
 
 ```mermaid
 flowchart LR
@@ -58,7 +57,7 @@ dotnet test --solution TEC.Core.slnx -c Release --no-build
 dotnet pack TEC.Core/TEC.Core.csproj -c Release -o ./artifacts
 ```
 
-O `dotnet pack` gera o `.nupkg` com `lib/net8.0`, `lib/net10.0`, a documentação XML, o `README.md` da raiz (o projeto não tem README próprio) e o `Images/Logo.png`.
+O `dotnet pack` gera o `.nupkg` com `lib/net10.0`, a documentação XML, o `README.md` da raiz (o projeto não tem README próprio) e o `Images/Logo.png`.
 
 > [!IMPORTANT]
 > O `README.md` da raiz vai dentro do pacote e aparece na página do GitHub Packages: use nele **links absolutos**
@@ -122,7 +121,7 @@ TEC.Core/
 ├── Images/Logo.png         ícone do pacote ⟵ canônico
 ├── samples/                TEC.Core.SampleApi e TEC.Core.LoadGenerator (nunca pacote)
 ├── TEC.Core/               o pacote (Common, Cryptography, Csv, Dates, DependencyInjection, Domain, Enums,
-│                           Exceptions, IO, Numbers, Polyfills, Responses, Security, Text, Threading)
+│                           Exceptions, IO, Numbers, Responses, Security, Text, Threading)
 ├── TEC.Core.Tests/         unitários e segurança (TUnit + FsCheck)
 ├── TEC.Core.LoadTests/     Carga-CI e Carga-Pesada
 ├── TEC.Core.Benchmarks/    BenchmarkDotNet
@@ -141,7 +140,7 @@ TEC.Core/
 ```mermaid
 flowchart LR
     B["🌿 Branch a partir da main"] --> C["✍️ Código + testes"]
-    C --> T["🧪 dotnet test<br/>net8.0, net10.0, sem ICU"]
+    C --> T["🧪 dotnet test<br/>net10.0, sem ICU"]
     T --> L["📝 CHANGELOG + docs/"]
     L --> PR["🔀 Pull request"]
     PR --> CI["✅ ci / ci-ok"]
@@ -151,7 +150,7 @@ flowchart LR
 1. Crie uma branch a partir da `main` (`feature/...` ou `fix/...`).
 2. Escreva o código **e** os testes, inclusive de entradas inválidas (veja [testes.md](testes.md#escrevendo-novos-testes)).
 3. Siga os [padrões](https://github.com/tudoemcodigo/tec-workflows/blob/main/docs/padroes.md): identificadores em inglês; XML docs, mensagens e documentação em português; classes `sealed` por padrão; `TimeProvider` em vez de `DateTime.Now`; `Regex` com `[GeneratedRegex]` e `NonBacktracking` (ou timeout).
-4. Rode `dotnet test` nos dois alvos e sem ICU; o build precisa passar sem avisos.
+4. Rode `dotnet test` com e sem ICU; o build precisa passar sem avisos.
 5. Registre a mudança no [CHANGELOG](../CHANGELOG.md) e atualize o tema em `docs/`.
 6. Abra o PR: a proteção da `main` exige o check `ci / ci-ok` com a branch atualizada.
 
@@ -159,7 +158,7 @@ flowchart LR
 
 Fluxo: PR → merge na `main` → **prévia automática**: o CI do push na `main`, com `ci-ok` verde, publica `<Version>-preview.N` (ex.: `0.0.1-preview.3`, com a `<Version>` do `Directory.Build.props`). Em PR nada é publicado.
 
-Versão estável ou release candidate: workflow **Publicar versão** (`release.yml`): Actions → **Publicar versão** → **Run workflow** → versão (`0.0.1` ou `1.1.0-rc.1`; prévias não são digitadas aqui). Ele roda convenções, pack, unitários ×3 com cobertura e CodeQL, cria a tag e o Release e só então publica no feed. Depois de publicar `X.Y.Z`, suba a `<Version>` do `Directory.Build.props` para a próxima quando quiser novas prévias: enquanto a tag `v<Version>` existir, o CI do push na `main` valida tudo normalmente, mas não gera prévia (emite um `::notice::` e pula o `publicar-previa`). O TEC.Core pode ficar em `0.0.1` e ainda receber correções de build e documentação na `main`. Testes de carga não entram em nenhum dos dois: só no `performance.yml`, manual. Detalhes e checklist em [⚙️ CI/CD](../.github/workflows/README.md).
+Versão estável ou release candidate: workflow **Publicar versão** (`release.yml`): Actions → **Publicar versão** → **Run workflow** → versão (`0.0.1` ou `1.1.0-rc.1`; prévias não são digitadas aqui). Ele roda convenções, pack, unitários ×2 (com e sem ICU) com cobertura e CodeQL, cria a tag e o Release e só então publica no feed. Depois de publicar `X.Y.Z`, suba a `<Version>` do `Directory.Build.props` para a próxima quando quiser novas prévias: enquanto a tag `v<Version>` existir, o CI do push na `main` valida tudo normalmente, mas não gera prévia (emite um `::notice::` e pula o `publicar-previa`). O TEC.Core pode ficar em `0.0.1` e ainda receber correções de build e documentação na `main`. Testes de carga não entram em nenhum dos dois: só no `performance.yml`, manual. Detalhes e checklist em [⚙️ CI/CD](../.github/workflows/README.md).
 
 ---
 

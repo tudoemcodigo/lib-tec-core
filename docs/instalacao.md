@@ -33,11 +33,11 @@ flowchart LR
 
 | Requisito | Detalhe |
 |---|---|
-| Projeto | `net8.0` ou `net10.0` (o pacote traz `lib/net8.0` e `lib/net10.0`) |
+| Projeto | `net10.0` ou posterior (o pacote traz só `lib/net10.0`) |
 | Credencial | PAT *classic* com o escopo `read:packages` (ou o `GITHUB_TOKEN` no Actions) |
 | Origem | Nome `tec-interno` (o mesmo usado no `packageSourceMapping` de todos os componentes) |
 | Dependência transitiva | Só `Microsoft.Extensions.DependencyInjection.Abstractions` |
-| Versão atual | `0.0.1` (ainda não publicada) |
+| Versão atual | `0.0.1`, a primeira publicação (a tag `v0.0.1` é criada pelo workflow **Publicar versão**; confira na aba *Packages* se o pacote já está no feed) |
 
 ---
 
@@ -137,7 +137,7 @@ git clone https://github.com/tudoemcodigo/lib-tec-core TEC.Core
 dotnet add MyApp/MyApp.csproj reference TEC.Core/TEC.Core/TEC.Core.csproj
 ```
 
-Componentes TEC usam `<TecReference Include="TEC.Core" />`, que faz isso automaticamente quando a pasta vizinha existe (veja [desenvolvimento.md](desenvolvimento.md)).
+Componentes TEC usam `<TecReference Include="TEC.Core" />`, que faz isso quando você compila com `-p:TecUseLocalProjects=true` e a pasta vizinha existe; sem essa propriedade (e sempre no CI) a dependência vem do pacote (veja [desenvolvimento.md](desenvolvimento.md)).
 
 ---
 

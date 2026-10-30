@@ -31,7 +31,7 @@ Implementar a classe [`SingleFlight<TKey, TValue>`](../../TEC.Core/Threading/Sin
 ## ⚖️ Consequências
 
 ### Positivas
-- **Blindagem do Banco de Dados:** Elimina picos de queries redundantes em momentos de expiração de cache.
+- **Menos consultas redundantes:** chamadas simultâneas com a mesma chave compartilham uma única execução quando o cache expira.
 - **Economia Operacional:** Reduz custos de tráfego de rede e consumo de cotas de APIs externas pagas.
 - **Thread-Safety sem Deadlocks:** Arquitetura com seções críticas curtas usando a nova primitiva de trava nativa do .NET (`System.Threading.Lock`).
 

@@ -28,14 +28,14 @@
 
 | Projeto | Ferramenta | O que faz |
 |---|---|---|
-| `TEC.Core.Tests` | [TUnit](https://tunit.dev) + [FsCheck](https://fscheck.github.io/FsCheck/) | **599 testes por TFM**: unidade, regressões de segurança, fuzzing, DoS, vazamento de dados e tempo constante (rápido) |
+| `TEC.Core.Tests` | [TUnit](https://tunit.dev) + [FsCheck](https://fscheck.github.io/FsCheck/) | **599 testes**: unidade, regressões de segurança, fuzzing, DoS, vazamento de dados e tempo constante (rápido) |
 | `TEC.Core.LoadTests` | TUnit | Concorrência nos singletons e fumaça da API de exemplo (`Carga-CI`); volume, soak e carga sustentada (`Carga-Pesada`) |
-| `TEC.Core.Benchmarks` | [BenchmarkDotNet](https://benchmarkdotnet.org) | Tempo e alocação, `net8.0` × `net10.0` |
+| `TEC.Core.Benchmarks` | [BenchmarkDotNet](https://benchmarkdotnet.org) | Tempo e alocação em `net10.0` |
 | `samples/TEC.Core.SampleApi` · `samples/TEC.Core.LoadGenerator` | ASP.NET Core · console | Alvo e gerador da carga HTTP (veja [samples](../samples/README.md)) |
 
 | Categoria (`[Category]`) | Projeto | Onde roda | Conteúdo |
 |---|---|---|---|
-| *(sem categoria)* | `TEC.Core.Tests` | Todo PR, push na `main` e publicação, matriz `net10.0` (cobertura) · `net8.0` · `net10.0` sem ICU | Unitários, regressão, segurança rápida |
+| *(sem categoria)* | `TEC.Core.Tests` | Todo PR, push na `main` e publicação, matriz `net10.0` (cobertura) · `net10.0` sem ICU | Unitários, regressão, segurança rápida |
 | `Carga-CI` | `TEC.Core.LoadTests` | `performance.yml` (manual, `suite` = `rapida` ou `todas`) | Concorrência e fumaça de carga (segundos) |
 | `Carga-Pesada` | `TEC.Core.LoadTests` | `performance.yml` (manual, `suite` = `pesadas` ou `todas`) | Volume, soak e carga HTTP sustentada |
 | `Seguranca-Pesada` | `TEC.Core.Tests` | `performance.yml` (manual, `suite` = `pesadas` ou `todas`) | Canais laterais de tempo (teste t de Welch) |
@@ -46,7 +46,7 @@ bloquear PR nem versão. Rodam só sob demanda.
 
 ```mermaid
 flowchart LR
-    PR["🔀 PR / push na main<br/>(ci.yml)"] --> U["Unitários + segurança rápida<br/>net10.0 · net8.0 · sem ICU"]
+    PR["🔀 PR / push na main<br/>(ci.yml)"] --> U["Unitários + segurança rápida<br/>net10.0 · sem ICU"]
     REL["🏷️ Publicar versão<br/>(release.yml)"] --> U
     PERF["⌨️ Manual<br/>(performance.yml)"] -->|"suite rapida"| C["Carga-CI<br/>concorrência · fumaça da API"]
     PERF -->|"suite pesadas"| CP["Carga-Pesada<br/>volume · soak · API sustentada"]
@@ -57,7 +57,7 @@ flowchart LR
 | Item | Valor |
 |---|---|
 | Framework | TUnit sobre o Microsoft.Testing.Platform (ativado no `dotnet test` pelo `global.json`) |
-| Alvos | `net8.0` e `net10.0`: cada teste roda nos dois runtimes |
+| Alvo | `net10.0` |
 | Testes pesados | `[Explicit]` + `[NotInParallel]`: o `dotnet test` comum os ignora; rodam só quando selecionados por categoria |
 | Recursos externos | Nenhum (a API de exemplo sobe em `127.0.0.1` numa porta livre) |
 
@@ -67,10 +67,10 @@ flowchart LR
 
 ### Como rodar localmente
 
-Pré-requisitos: SDK do `global.json` (`10.0.401`, `rollForward: latestPatch`) e os runtimes **.NET 8** e **ASP.NET Core 8** (alvo `net8.0`; a API de exemplo usa ASP.NET Core).
+Pré-requisito: SDK do `global.json` (`10.0.402`, `rollForward: latestPatch`), que já traz os runtimes .NET 10 e ASP.NET Core 10 usados pelos testes e pela API de exemplo.
 
 ```bash
-# Unitários, segurança rápida e Carga-CI (net8.0 e net10.0); o CI roda só o TEC.Core.Tests
+# Unitários, segurança rápida e Carga-CI; o CI roda só o TEC.Core.Tests
 dotnet restore TEC.Core.slnx
 dotnet build TEC.Core.slnx -c Release
 dotnet test --solution TEC.Core.slnx -c Release --no-build
@@ -108,7 +108,7 @@ dotnet test --project TEC.Core.Tests     -c Release -f net10.0 --treenode-filter
 | Pasta | Classe | O que cobre |
 |---|---|---|
 | `Common/` | `CommonTests`, `ResultCompositionTests` | `Guard`, `Result`/`Result<T>`, `Error`, `ErrorType`, JSON padrão, `BrazilianCulture` e a composição (`Bind`, `Ensure`, `BindAsync`, `MapAsync`) |
-| `Compatibility/` | `CompatibilityTests` | Comportamento idêntico em `net8.0` e `net10.0` (equivalentes internos de APIs do .NET 9+) e caminhos compatíveis com AOT |
+| `Compatibility/` | `CompatibilityTests` | Codificações (hexadecimal, Base64Url) conferidas contra implementações de referência e caminhos compatíveis com AOT |
 | `Cryptography/` | `AesGcmCryptographyTests`, `AsymmetricCryptographyTests`, `HashingTests` | AES-GCM em memória e stream, RSA e híbrida, SHA/HMAC (vetores RFC 4231), PBKDF2 e geradores |
 | `Domain/` | `AggregateRootTests` | `DomainEntity<TId>` (igualdade e entidades transientes), `AggregateRoot<TId>` e o limite de eventos pendentes |
 | `Csv/` | `CsvTests` | Leitura e escrita, atributos, tipos, modo estrito, linhas inválidas e anti-injeção de fórmulas |
@@ -119,6 +119,7 @@ dotnet test --project TEC.Core.Tests     -c Release -f net10.0 --treenode-filter
 | `Numbers/` | `NumbersTests` | Moeda, percentual, arredondamentos, extenso e `TryParseBrazilianDecimal` |
 | `Responses/` | `ApiResponseTests` | Envelope, `FromResult`/`FromException`, JSON gerado e paginação |
 | `Security/` | `SecurityRegressionTests`, `SecurityAuditTests`, `ThirdAuditTests`, `FourthAuditTests`, `CurrentUserTests` | Regressões das auditorias: limites, enums fora do domínio, fórmulas, mascaramento, UTF-16 inválido, formatos versionados, mensagens sem dados; contrato de `ICurrentUser` |
+| *(raiz)* | `IssueRegressionTests` | Regressões de issues pontuais: delimitador alternativo no CSV, `NeedsRehash`, `DateTimeOffset` sem offset, instantes UTC/Local nos dias úteis, `Holiday.ToString` e hash de `DomainEntity` |
 | `Threading/` | `SingleFlightTests` | Uma execução por chave, cancelamento cooperativo e exceções compartilhadas |
 | `Text/` | `DocumentTests`, `StringExtensionsTests`, `Base64UrlEncoderTests` | CPF, CNPJ (inclusive alfanumérico), PIS, CEP, telefone, e-mail, máscaras, extensões de texto e Base64Url estrito |
 | `Validation/` | `ParameterValidationTests` | Entradas inválidas falham de forma clara, nunca com resultado errado em silêncio |
@@ -200,7 +201,7 @@ Cada teste pesado escreve um relatório (latência, vazão, memória por amostra
 
 ```bash
 dotnet run -c Release --project TEC.Core.Benchmarks -f net10.0 -- --filter "*"
-dotnet run -c Release --project TEC.Core.Benchmarks -f net10.0 -- --filter "*Csv*" --runtimes net8.0 net10.0
+dotnet run -c Release --project TEC.Core.Benchmarks -f net10.0 -- --filter "*Csv*"
 dotnet run -c Release --project TEC.Core.Benchmarks -f net10.0 -- --filter "*Date*" --job short   # rápido e menos preciso
 ```
 
@@ -240,9 +241,9 @@ No CI, o resumo de cobertura aparece no job de relatório e o HTML completo fica
 
 | Workflow | Quando | O que roda |
 |---|---|---|
-| [`ci.yml`](../.github/workflows/ci.yml) | Todo PR, merge queue, push na `main`, segunda 06:00 UTC e manual | `TEC.Core.Tests` em `net10.0` (cobertura), `net8.0` e `net10.0` sem ICU; build da solução inteira (benchmarks e samples continuam compilando) |
+| [`ci.yml`](../.github/workflows/ci.yml) | Todo PR, merge queue, push na `main`, segunda 06:00 UTC e manual | `TEC.Core.Tests` em `net10.0` (cobertura) e `net10.0` sem ICU; build da solução inteira (benchmarks e samples continuam compilando) |
 | [`performance.yml`](../.github/workflows/performance.yml) | Só manual | Input `suite`: `pesadas` (padrão: `Carga-Pesada` + `Seguranca-Pesada`, durações e volumes configuráveis), `rapida` (`Carga-CI`) ou `todas`; benchmarks opcionais |
-| [`release.yml`](../.github/workflows/release.yml) | Manual (**Publicar versão**) | Unitários ×3 com cobertura (mais convenções, pack e CodeQL) antes da tag; sem carga |
+| [`release.yml`](../.github/workflows/release.yml) | Manual (**Publicar versão**) | Unitários ×2 (com e sem ICU) com cobertura (mais convenções, pack e CodeQL) antes da tag; sem carga |
 
 Detalhes em [⚙️ CI/CD](../.github/workflows/README.md).
 
@@ -298,7 +299,6 @@ As `TEC_CARGA_*` só afetam os testes pesados; valores inválidos, vazios ou ≤
 
 | Sintoma | Causa | O que fazer |
 |---|---|---|
-| Testes `net8.0` não rodam | Runtime .NET 8 ou ASP.NET Core 8 ausente | Instale os runtimes ou rode `-f net10.0` |
 | 0 testes (código 5) | `-nologo` repassado ao executável de testes, ou filtro sem correspondência | Remova `-nologo`; confira o `--treenode-filter` |
 | Pesados não rodam | São `[Explicit]` | Selecione a categoria com `--treenode-filter "/*/*/*/*[Category=Carga-Pesada]"` |
 | Teste de tempo/memória falhou uma vez | CPU disputada ou economia de energia | Repita com a máquina ociosa, em `Release`; compare com os [resultados de referência](#resultados-de-referência) |

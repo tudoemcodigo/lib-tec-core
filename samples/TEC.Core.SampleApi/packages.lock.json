@@ -5,11 +5,6 @@
       "tec.core": {
         "type": "Project"
       }
-    },
-    "net8.0": {
-      "tec.core": {
-        "type": "Project"
-      }
     }
   }
 }

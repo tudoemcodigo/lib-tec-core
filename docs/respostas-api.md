@@ -151,7 +151,7 @@ var response = ApiResponse.ValidationError(
 ```
 
 > [!NOTE]
-> Em projetos `net8.0` (C# 12), os parâmetros `params IEnumerable<ApiError>` só aceitam argumentos avulsos com C# 13+. Passe uma coleção (`ValidationError([error1, error2])`) ou use `<LangVersion>13</LangVersion>`/`latest` com o SDK 9+. Veja [Compatibilidade](compatibilidade.md).
+> Os parâmetros `params IEnumerable<ApiError>` aceitam argumentos avulsos com C# 13+, o que já é o padrão no .NET 10. Se o projeto fixar `<LangVersion>` abaixo de 13, passe uma coleção (`ValidationError([error1, error2])`). Veja [Compatibilidade](compatibilidade.md).
 
 ### FromResult e FromException
 
@@ -540,7 +540,8 @@ app.UseExceptionHandler();
 | Exceção | Quando ocorre | O que fazer |
 |---|---|---|
 | `ArgumentOutOfRangeException` | `Fail` com status fora de 400 a 599 (*Respostas de falha devem ter status HTTP entre 400 e 599.*); `StatusCode` fora de 100 a 599, inclusive via `with` (*O status HTTP deve estar entre 100 e 599.*) | Use as fábricas prontas ou um status válido |
-| `ArgumentOutOfRangeException` | Página < 1 (*A página deve ser maior ou igual a 1.*), tamanho < 1 (*O tamanho da página deve ser maior que zero.*), total < 0 (*O total de itens não pode ser negativo.*), `pageSize > maxPageSize`, ou `skip` acima de `int.MaxValue` (*Página fora do intervalo permitido.*) | Valide `page`/`pageSize` da query string e devolva 400 |
+| `ArgumentOutOfRangeException` | `PagedResult<T>` com página < 1 (*A página deve ser maior ou igual a 1.*), tamanho < 1 (*O tamanho da página deve ser maior que zero.*) ou total < 0 (*O total de itens não pode ser negativo.*) | Valide `page`/`pageSize` da query string e devolva 400 |
+| `ArgumentOutOfRangeException` | `Paginate`, `ToPagedResult` e `CalculateSkip` com `page` < 1, `pageSize` < 1 ou `pageSize > maxPageSize` (mensagem padrão do .NET, que cita o valor numérico recebido), ou `skip` acima de `int.MaxValue` (*Página fora do intervalo permitido.*) | Valide `page`/`pageSize` da query string e devolva 400 |
 | `ArgumentException` | Mensagem vazia em `Fail`/`BadRequest`/`Conflict`; item nulo na lista de erros (*A lista de erros não pode conter itens nulos.*); `ApiError` com `Code`/`Message` vazios (inclusive via `with`) | Informe mensagem e erros válidos |
 | `ArgumentException` | `PagedResponse.Create` com mais itens que o tamanho da página (*A página contém mais itens que o tamanho da página.*) ou que o total (*A página contém mais itens que o total informado.*) | Confira a consulta que montou a página |
 | `ArgumentNullException` | Lista de erros nula; `Errors = null` via `with`; `FromResult(null)`/`FromException(null)`; `ApiError.FromError(null)`; `Items`, `query`, `source`, `result` ou `mapper` nulos | Não passe `null` |
@@ -571,10 +572,10 @@ app.UseExceptionHandler();
 </details>
 
 <details>
-<summary><code>ValidationError(error1, error2)</code> não compila em projeto .NET 8</summary>
+<summary><code>ValidationError(error1, error2)</code> não compila</summary>
 
-**Causa:** `params IEnumerable<…>` exige C# 13; projetos `net8.0` usam C# 12 por padrão.
-**Solução:** passe uma coleção (`ValidationError([error1, error2])`) ou defina `<LangVersion>latest</LangVersion>` com o SDK 9+.
+**Causa:** `params IEnumerable<…>` exige C# 13, e o projeto fixa `<LangVersion>` abaixo disso.
+**Solução:** passe uma coleção (`ValidationError([error1, error2])`) ou remova o `<LangVersion>` fixo (o padrão do .NET 10 é C# 14).
 
 </details>
 

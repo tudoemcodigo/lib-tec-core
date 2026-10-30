@@ -4,7 +4,7 @@ name: Performance
 #   rapida     -> TEC.Core.LoadTests [Carga-CI]: carga curta com limites folgados (input suite = rapida ou todas)
 #   carga      -> TEC.Core.LoadTests [Carga-Pesada]: volume de CSV e AES-GCM, soak e carga sustentada na API de exemplo
 #   seguranca  -> TEC.Core.Tests [Seguranca-Pesada]: canais laterais de tempo (teste t de Welch)
-#   benchmarks -> TEC.Core.Benchmarks (BenchmarkDotNet, net8.0 x net10.0), só no disparo manual
+#   benchmarks -> TEC.Core.Benchmarks (BenchmarkDotNet, net10.0), só no disparo manual
 on:
   workflow_dispatch:
     inputs:

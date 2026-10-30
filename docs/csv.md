@@ -56,7 +56,7 @@ flowchart LR
 
 ### Regras de mapeamento
 
-- São consideradas as **propriedades públicas de instância**. A escrita exige getter e a leitura exige setter público (`set` ou `init`). O tipo de destino pode ser classe ou `struct` (precisa de construtor sem parâmetros: `where T : new()`).
+- São consideradas as **propriedades públicas de instância com getter público**. Uma propriedade `{ private get; set; }` fica fora do CSV: não é escrita (o valor escondido pelo tipo não vaza) nem lida, e não conta na ordem das colunas sem cabeçalho. A leitura exige também setter público (`set` ou `init`). O tipo de destino pode ser classe ou `struct` (precisa de construtor sem parâmetros: `where T : new()`).
 - O setter pode validar o valor: se lançar `ArgumentException` (inclusive `ArgumentOutOfRangeException`), `FormatException`, `InvalidCastException`, `OverflowException` ou `NotSupportedException`, a linha vira uma `CsvException` com linha e coluna (*Valor recusado pela propriedade P*) e é descartada com `SkipInvalidRows`, como qualquer valor inválido. Outras exceções do setter são propagadas sem alteração.
 - Nomes de coluna duplicados, sem diferenciar maiúsculas e acentos, geram `InvalidOperationException`, assim como um tipo sem propriedades mapeáveis. Propriedade de tipo não suportado gera `NotSupportedException`: marque-a com `[CsvIgnore]`.
 - Na leitura com cabeçalho, as colunas são associadas **pelo nome, sem diferenciar maiúsculas e acentos** (`Código` = `CODIGO` = `codigo`), e colunas extras são ignoradas. Sem cabeçalho, a associação segue a ordem das propriedades.
@@ -197,7 +197,7 @@ await foreach (var customer in new CsvReader().ReadFileAsync<Customer>("clientes
     await repository.InsertAsync(customer, ct);   // processa linha a linha, sem carregar o arquivo inteiro
 }
 
-// Lista completa (arquivos pequenos): nativo no .NET 10; no .NET 8, pacote System.Linq.AsyncEnumerable
+// Lista completa (arquivos pequenos): ToListAsync faz parte do .NET 10
 List<Customer> list = await new CsvReader().ReadFileAsync<Customer>("clientes.csv").ToListAsync();
 
 // Upload em ASP.NET Core
@@ -291,7 +291,7 @@ public sealed class CustomerExporter(ICsvWriter csv)
 
 public sealed class CustomerImporter(ICsvReader csv)
 {
-    // Lista completa (arquivos pequenos): nativo no .NET 10; no .NET 8, pacote System.Linq.AsyncEnumerable
+    // Lista completa (arquivos pequenos): ToListAsync faz parte do .NET 10
     public async Task<List<Customer>> LoadAsync(Stream stream, CancellationToken ct) =>
         await csv.ReadAsync<Customer>(stream, ct).ToListAsync(ct);
 }
@@ -505,14 +505,6 @@ Atributos: `CsvColumnAttribute.Order` (padrão `int.MaxValue` = ordem de declara
 ---
 
 ## ❓ Perguntas frequentes
-
-<details>
-<summary><code>ToListAsync</code> não existe ao ler CSV no .NET 8</summary>
-
-**Causa:** os operadores LINQ para `IAsyncEnumerable<T>` (`System.Linq.AsyncEnumerable`) são nativos só no .NET 10.
-**Solução:** adicione o pacote `System.Linq.AsyncEnumerable` ao projeto `net8.0` ou use `await foreach`.
-
-</details>
 
 <details>
 <summary>O Excel mostra os acentos errados</summary>

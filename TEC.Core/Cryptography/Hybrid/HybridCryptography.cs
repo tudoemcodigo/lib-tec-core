@@ -5,6 +5,7 @@ using TEC.Core.Common.Guards;
 using TEC.Core.Cryptography.Abstractions;
 using TEC.Core.Cryptography.Asymmetric;
 using TEC.Core.Cryptography.Symmetric;
+using TEC.Core.IO;
 
 namespace TEC.Core.Cryptography.Hybrid;
 
@@ -22,6 +23,12 @@ public sealed class HybridCryptography : IHybridCryptography
 {
     /// <summary>Versão do formato (primeiro byte dos dados cifrados).</summary>
     public const byte FormatVersion = 1;
+
+    /// <summary>
+    /// Limite padrão, em bytes, do arquivo que <c>DecryptFromFileAsync</c> lê inteiro em memória: 16 MiB (o mesmo de
+    /// <see cref="AesGcmCryptography.DefaultMaxFileBytes"/>). Para arquivos maiores, use <c>EncryptFileAsync</c>/<c>DecryptFileAsync</c>.
+    /// </summary>
+    public const int DefaultMaxFileBytes = AesGcmCryptography.DefaultMaxFileBytes;
 
     private const int VersionSize = 1;
     private const int LengthPrefixSize = sizeof(ushort);
@@ -216,21 +223,24 @@ public sealed class HybridCryptography : IHybridCryptography
     }
 
     /// <inheritdoc />
-    public async Task<byte[]> DecryptFromFileAsync(string inputFilePath, RsaKey privateKey, CancellationToken cancellationToken = default)
+    public async Task<byte[]> DecryptFromFileAsync(string inputFilePath, RsaKey privateKey, int maxBytes = DefaultMaxFileBytes, CancellationToken cancellationToken = default)
     {
         Guard.NotNullOrWhiteSpace(inputFilePath);
         Guard.NotNull(privateKey);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxBytes);
 
         var fullInput = Path.GetFullPath(inputFilePath);
-        var fileBytes = await File.ReadAllBytesAsync(fullInput, cancellationToken).ConfigureAwait(false);
+        var fileBytes = await BoundedFileReader.TryReadBytesAsync(fullInput, maxBytes, cancellationToken).ConfigureAwait(false)
+            ?? throw AesGcmCryptography.FileTooLarge(maxBytes);
         return Decrypt(fileBytes, privateKey);
     }
 
     /// <inheritdoc />
-    public async Task<byte[]> DecryptFromFileAsync(string inputFilePath, string privateKeyPem, CancellationToken cancellationToken = default)
+    public async Task<byte[]> DecryptFromFileAsync(string inputFilePath, string privateKeyPem, int maxBytes = DefaultMaxFileBytes, CancellationToken cancellationToken = default)
     {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxBytes);
         using var key = RsaKey.FromPrivateKeyPem(privateKeyPem);
-        return await DecryptFromFileAsync(inputFilePath, key, cancellationToken).ConfigureAwait(false);
+        return await DecryptFromFileAsync(inputFilePath, key, maxBytes, cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />

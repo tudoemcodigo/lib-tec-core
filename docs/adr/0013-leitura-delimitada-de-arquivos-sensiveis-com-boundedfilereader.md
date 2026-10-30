@@ -3,7 +3,7 @@
 # ADR-0013: Leitura Delimitada de Arquivos de Segredos e Configuração com Zeragem de Buffer
 
 - **Status:** Aceito
-- **Data:** 2026-10-08 (atualizado em 2026-10-19)
+- **Data:** 2026-10-08 (atualizado em 2026-10-29)
 - **Área:** `TEC.Core.IO`
 - **Decisores:** Roberto Oliveira / Time TEC
 
@@ -35,6 +35,9 @@ Criar o utilitário estático [`BoundedFileReader`](../../TEC.Core/IO/BoundedFil
   - Se os primeiros bytes forem o preâmbulo UTF-8 (`EF BB BF`), eles são fatiados e descartados antes da conversão para texto.
 - **UTF-8 Estrito:**
   - Conteúdo que não represente UTF-8 válido lança `InvalidDataException` imediata, com mensagem neutra que **não reproduz nenhum trecho do arquivo**, impedindo vazamento de trechos de chaves em mensagens de exceção.
+- **Leitura binária para a criptografia (2026-10-29):**
+  - O método interno `TryReadBytesAsync(string path, int maxBytes, CancellationToken)` aplica o mesmo teto a arquivos binários, de forma assíncrona e sem descartar BOM. Devolve `null` quando o arquivo passa do limite.
+  - `AesGcmCryptography.DecryptFromFileAsync` e `HybridCryptography.DecryptFromFileAsync` usam esse método no lugar de `File.ReadAllBytesAsync`, com `maxBytes` opcional (padrão de 16 MiB, `DefaultMaxFileBytes`). Acima do limite lançam `InvalidDataException` sem o caminho do arquivo na mensagem. O método fica interno porque, por enquanto, só a criptografia precisa dele.
 
 ## ⚖️ Consequências
 
@@ -48,4 +51,4 @@ Criar o utilitário estático [`BoundedFileReader`](../../TEC.Core/IO/BoundedFil
 
 ---
 
-⬅️ [Anterior: ADR-0012](0012-serializacao-json-estrita-imutavel-e-compativel-com-aot.md) · [🏛️ Índice dos ADRs](README.md)
+⬅️ [Anterior: ADR-0012](0012-serializacao-json-estrita-imutavel-e-compativel-com-aot.md) · [🏛️ Índice dos ADRs](README.md) · [Próximo: ADR-0014](0014-alvo-unico-net10.md) ➡️

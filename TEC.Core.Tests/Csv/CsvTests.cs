@@ -219,6 +219,79 @@ public class CsvTests
         public override string Name { get; set; } = string.Empty;
     }
 
+    // Getter privado: o tipo escondeu o valor, então ele não pode sair no CSV nem ocupar posição de coluna
+    public sealed class WithPrivateGetter
+    {
+        private string _secret = "segredo-interno";
+
+        public string Name { get; set; } = string.Empty;
+
+        public string Secret { private get => _secret; set => _secret = value; }
+
+        public int Age { get; set; }
+
+        public string RevealSecret() => _secret;
+    }
+
+    public sealed class OnlyPrivateGetters
+    {
+        public string Secret { private get; set; } = "segredo";
+    }
+
+    public sealed class WithPrivateSetter
+    {
+        public string Name { get; set; } = string.Empty;
+
+        public string Code { get; private set; } = "fixo";
+    }
+
+    // Regressão: propriedade { private get; set; } entrava no CSV e o getter privado era chamado por reflexão
+    [Test]
+    public async Task Write_PrivateGetter_IsNotExported()
+    {
+        var csv = await WriteToStringAsync(new[] { new WithPrivateGetter { Name = "Ana", Age = 30 } });
+
+        await Assert.That(csv).IsEqualTo("Name;Age\r\n" + "Ana;30\r\n");
+        await Assert.That(csv).DoesNotContain("segredo-interno");
+    }
+
+    [Test]
+    public async Task Read_PrivateGetter_ColumnInHeaderIsIgnored()
+    {
+        var result = await ReadFromStringAsync<WithPrivateGetter>("Name;Secret;Age\nAna;injetado;30");
+
+        await Assert.That(result.Count).IsEqualTo(1);
+        await Assert.That((result[0].Name, result[0].Age)).IsEqualTo(("Ana", 30));
+        await Assert.That(result[0].RevealSecret()).IsEqualTo("segredo-interno");
+    }
+
+    [Test]
+    public async Task Read_PrivateGetter_DoesNotTakeAPositionWithoutHeader()
+    {
+        var result = await ReadFromStringAsync<WithPrivateGetter>("Ana;30", new CsvOptions { HasHeader = false });
+
+        await Assert.That(result.Count).IsEqualTo(1);
+        await Assert.That((result[0].Name, result[0].Age)).IsEqualTo(("Ana", 30));
+        await Assert.That(result[0].RevealSecret()).IsEqualTo("segredo-interno");
+    }
+
+    [Test]
+    public async Task Write_TypeWithOnlyPrivateGetters_Throws()
+    {
+        await Assert.That(async () => await WriteToStringAsync(new[] { new OnlyPrivateGetters() }))
+            .Throws<InvalidOperationException>();
+    }
+
+    [Test]
+    public async Task PrivateSetter_IsWrittenButNotRead()
+    {
+        var csv = await WriteToStringAsync(new[] { new WithPrivateSetter { Name = "Ana" } });
+        await Assert.That(csv).IsEqualTo("Name;Code\r\n" + "Ana;fixo\r\n");
+
+        var result = await ReadFromStringAsync<WithPrivateSetter>("Name;Code\nBia;alterado");
+        await Assert.That((result[0].Name, result[0].Code)).IsEqualTo(("Bia", "fixo"));
+    }
+
     public sealed class Amount
     {
         public string? Name { get; set; }

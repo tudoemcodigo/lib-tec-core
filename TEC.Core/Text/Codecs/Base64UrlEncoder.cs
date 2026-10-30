@@ -1,12 +1,10 @@
-#if NET9_0_OR_GREATER
 using System.Buffers.Text;
-#endif
 
 namespace TEC.Core.Text.Codecs;
 
 /// <summary>
 /// Base64 seguro para URL, sem preenchimento (RFC 4648 §5): alfabeto <c>A-Z a-z 0-9 - _</c>, sem <c>=</c>.
-/// Mesmo resultado em <c>net8.0</c> e <c>net10.0</c> (no .NET 9+ delega para <c>System.Buffers.Text.Base64Url</c>).
+/// A codificação delega para <c>System.Buffers.Text.Base64Url</c>.
 /// </summary>
 /// <remarks>
 /// Use para tokens, chaves de API, identificadores e hashes que trafegam em URL, cabeçalho ou nome de arquivo.
@@ -17,14 +15,7 @@ public static class Base64UrlEncoder
     /// <summary>Codifica bytes em Base64Url sem preenchimento.</summary>
     /// <param name="bytes">Bytes a codificar.</param>
     /// <returns>Texto Base64Url (vazio para entrada vazia).</returns>
-    public static string Encode(ReadOnlySpan<byte> bytes)
-    {
-#if NET9_0_OR_GREATER
-        return Base64Url.EncodeToString(bytes);
-#else
-        return Convert.ToBase64String(bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_');
-#endif
-    }
+    public static string Encode(ReadOnlySpan<byte> bytes) => Base64Url.EncodeToString(bytes);
 
     /// <summary>
     /// Indica se o texto é Base64Url válido e canônico, sem preenchimento: só caracteres do alfabeto, tamanho

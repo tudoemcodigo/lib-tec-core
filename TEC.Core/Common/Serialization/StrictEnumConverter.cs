@@ -9,8 +9,8 @@ namespace TEC.Core.Common.Serialization;
 /// Conversor de enum como texto em camelCase que só aceita, na leitura, nomes de membros definidos.
 /// </summary>
 /// <remarks>
-/// O <see cref="JsonStringEnumConverter{TEnum}"/> com <c>allowIntegerValues: false</c> recusa só o número JSON: no .NET 8
-/// ele ainda aceita número entre aspas (<c>"999"</c>) e, em qualquer versão, combinações por vírgula
+/// O <see cref="JsonStringEnumConverter{TEnum}"/> com <c>allowIntegerValues: false</c> recusa só o número JSON: conforme a
+/// versão do runtime, ainda aceita número entre aspas (<c>"999"</c>) e, em qualquer versão, combinações por vírgula
 /// (<c>"a, b"</c>) mesmo em enums sem <c>[Flags]</c>, produzindo valores fora do enum ou um membro diferente do enviado.
 /// Este conversor delega a leitura e a escrita ao conversor do runtime e recusa esses casos.
 /// </remarks>

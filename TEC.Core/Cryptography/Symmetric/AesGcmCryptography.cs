@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using TEC.Core.Common.Guards;
 using TEC.Core.Cryptography.Abstractions;
+using TEC.Core.IO;
 
 namespace TEC.Core.Cryptography.Symmetric;
 
@@ -25,6 +26,12 @@ public sealed class AesGcmCryptography : ISymmetricCryptography
 {
     /// <summary>Versão do formato em memória (primeiro byte de <see cref="Encrypt(byte[], byte[], byte[])"/>).</summary>
     public const byte FormatVersion = 1;
+
+    /// <summary>
+    /// Limite padrão, em bytes, do arquivo que <c>DecryptFromFileAsync</c> lê inteiro em memória: 16 MiB.
+    /// Para arquivos maiores, use <c>EncryptFileAsync</c>/<c>DecryptFileAsync</c>, que trabalham em streaming.
+    /// </summary>
+    public const int DefaultMaxFileBytes = 16 * 1024 * 1024;
 
     private const int VersionSize = 1;
     private const int NonceSize = 12;
@@ -415,23 +422,30 @@ public sealed class AesGcmCryptography : ISymmetricCryptography
     }
 
     /// <inheritdoc />
-    public async Task<byte[]> DecryptFromFileAsync(string inputFilePath, byte[] key, byte[]? associatedData = null, CancellationToken cancellationToken = default)
+    public async Task<byte[]> DecryptFromFileAsync(string inputFilePath, byte[] key, byte[]? associatedData = null, int maxBytes = DefaultMaxFileBytes, CancellationToken cancellationToken = default)
     {
         Guard.NotNullOrWhiteSpace(inputFilePath);
         ValidateKey(key);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxBytes);
 
         var fullInput = Path.GetFullPath(inputFilePath);
-        var fileBytes = await File.ReadAllBytesAsync(fullInput, cancellationToken).ConfigureAwait(false);
+        var fileBytes = await BoundedFileReader.TryReadBytesAsync(fullInput, maxBytes, cancellationToken).ConfigureAwait(false)
+            ?? throw FileTooLarge(maxBytes);
         return Decrypt(fileBytes, key, associatedData);
     }
 
+    // Sem o caminho do arquivo na mensagem: o nome pode identificar o titular dos dados
+    internal static InvalidDataException FileTooLarge(int maxBytes) => new(
+        $"O arquivo criptografado passa do limite de {maxBytes} bytes para leitura em memória. " +
+        "Aumente maxBytes ou use DecryptFileAsync, que trabalha em streaming.");
+
     /// <inheritdoc />
-    public async Task<byte[]> DecryptFromFileAsync(string inputFilePath, string base64Key, byte[]? associatedData = null, CancellationToken cancellationToken = default)
+    public async Task<byte[]> DecryptFromFileAsync(string inputFilePath, string base64Key, byte[]? associatedData = null, int maxBytes = DefaultMaxFileBytes, CancellationToken cancellationToken = default)
     {
         var key = DecodeKey(base64Key);
         try
         {
-            return await DecryptFromFileAsync(inputFilePath, key, associatedData, cancellationToken).ConfigureAwait(false);
+            return await DecryptFromFileAsync(inputFilePath, key, associatedData, maxBytes, cancellationToken).ConfigureAwait(false);
         }
         finally
         {

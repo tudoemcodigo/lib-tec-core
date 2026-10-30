@@ -93,6 +93,61 @@ public static class BoundedFileReader
         }
     }
 
+    /// <summary>
+    /// Lê o arquivo inteiro como bytes, se ele couber no limite. Usado pelas APIs que carregam um arquivo em memória
+    /// (ex.: <c>DecryptFromFileAsync</c>) para que um arquivo grande ou hostil não esgote a memória.
+    /// </summary>
+    /// <param name="path">Caminho do arquivo.</param>
+    /// <param name="maxBytes">Tamanho máximo aceito, em bytes (maior que zero).</param>
+    /// <param name="cancellationToken">Cancelamento da leitura.</param>
+    /// <returns>
+    /// O conteúdo, ou <c>null</c> se o arquivo passar de <paramref name="maxBytes"/>: nunca lê mais que
+    /// <c>maxBytes + 1</c> bytes, mesmo se o arquivo não informar o tamanho ou crescer durante a leitura.
+    /// </returns>
+    /// <exception cref="ArgumentException"><paramref name="path"/> vazio.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="maxBytes"/> menor ou igual a zero.</exception>
+    internal static async Task<byte[]?> TryReadBytesAsync(string path, int maxBytes, CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(path);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxBytes);
+
+        var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 1,
+            FileOptions.Asynchronous | FileOptions.SequentialScan);
+        await using (stream.ConfigureAwait(false))
+        {
+            long reported = stream.CanSeek ? stream.Length : 0;
+            if (reported > maxBytes)
+                return null;
+
+            int limit = (int)Math.Min((long)maxBytes + 1, Array.MaxLength);
+            var buffer = new byte[reported > 0 ? (int)Math.Min(reported + 1, limit) : Math.Min(InitialBufferBytes, limit)];
+            int total = 0;
+            try
+            {
+                while (true)
+                {
+                    if (total == buffer.Length)
+                    {
+                        if (buffer.Length == limit)
+                            break;
+                        buffer = Grow(buffer, (int)Math.Min((long)buffer.Length * 2, limit));
+                    }
+
+                    int read = await stream.ReadAsync(buffer.AsMemory(total), cancellationToken).ConfigureAwait(false);
+                    if (read == 0)
+                        break;
+                    total += read;
+                }
+
+                return total == limit ? null : buffer.AsSpan(0, total).ToArray();
+            }
+            finally
+            {
+                CryptographicOperations.ZeroMemory(buffer);
+            }
+        }
+    }
+
     private static byte[] Grow(byte[] current, int newSize)
     {
         var bigger = new byte[newSize];

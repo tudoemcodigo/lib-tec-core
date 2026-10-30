@@ -47,6 +47,15 @@ O TEC.Core só define os contratos. Quem coleta os eventos é a persistência: o
 | `Id` | Identificador (`protected set`) |
 | `Equals` / `==` / `!=` / `GetHashCode` | Iguais quando têm o **mesmo tipo concreto** e o mesmo `Id`. Entidade sem `Id` (valor padrão, "transiente") só é igual a si mesma. O hash depende do tipo real da entidade e permanece estável quando o ORM atribui o `Id` |
 
+> [!WARNING]
+> **Coleções com hash ficam O(N²).** `GetHashCode` devolve o mesmo valor para todas as entidades de um tipo (o `Id`
+> não entra no cálculo). É de propósito: se o hash usasse o `Id`, uma entidade transiente guardada num `HashSet` ou
+> como chave de `Dictionary` mudaria de hash quando o ORM atribuísse o `Id` e ficaria inalcançável na coleção. O custo
+> é que todas as entidades do mesmo tipo caem no mesmo balde: cada inserção ou busca compara com as anteriores, e
+> montar um `HashSet<Pedido>` com N pedidos custa O(N²) comparações. Até algumas centenas de itens isso passa
+> despercebido; com milhares, indexe pelo `Id` (`Dictionary<Guid, Pedido>`, `ToDictionary(p => p.Id)`) ou use um
+> `IEqualityComparer` próprio que considere o `Id` quando todas as entidades já estiverem persistidas.
+
 > [!NOTE]
 > O nome não é `Entity` para não colidir com `TEC.ORM.Entities.Entity<TKey>`, que traz soft delete e auditoria. Use o do ORM quando quiser esses recursos; use o daqui quando o domínio não deve conhecer a persistência.
 

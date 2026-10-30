@@ -69,9 +69,22 @@ public interface ISymmetricCryptography
     /// <param name="inputFilePath">Caminho do arquivo criptografado.</param>
     /// <param name="key">Chave de 16, 24 ou 32 bytes.</param>
     /// <param name="associatedData">Dados adicionais autenticados (opcional).</param>
+    /// <param name="maxBytes">
+    /// Tamanho máximo do arquivo, em bytes. Padrão: 16 MiB (<c>AesGcmCryptography.DefaultMaxFileBytes</c>). O arquivo
+    /// inteiro vai para a memória; para arquivos maiores, prefira <c>DecryptFileAsync</c>, que trabalha em streaming.
+    /// </param>
     /// <param name="cancellationToken">Cancelamento da operação.</param>
-    Task<byte[]> DecryptFromFileAsync(string inputFilePath, byte[] key, byte[]? associatedData = null, CancellationToken cancellationToken = default);
+    /// <exception cref="InvalidDataException">O arquivo passa de <paramref name="maxBytes"/>; nada além do limite é lido.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="maxBytes"/> menor ou igual a zero.</exception>
+    Task<byte[]> DecryptFromFileAsync(string inputFilePath, byte[] key, byte[]? associatedData = null, int maxBytes = 16 * 1024 * 1024, CancellationToken cancellationToken = default);
 
     /// <summary>Lê um arquivo criptografado do disco e retorna os dados binários descriptografados em memória, com chave em Base64.</summary>
-    Task<byte[]> DecryptFromFileAsync(string inputFilePath, string base64Key, byte[]? associatedData = null, CancellationToken cancellationToken = default);
+    /// <param name="inputFilePath">Caminho do arquivo criptografado.</param>
+    /// <param name="base64Key">Chave em Base64 (16, 24 ou 32 bytes).</param>
+    /// <param name="associatedData">Dados adicionais autenticados (opcional).</param>
+    /// <param name="maxBytes">Tamanho máximo do arquivo, em bytes. Padrão: 16 MiB (<c>AesGcmCryptography.DefaultMaxFileBytes</c>).</param>
+    /// <param name="cancellationToken">Cancelamento da operação.</param>
+    /// <exception cref="InvalidDataException">O arquivo passa de <paramref name="maxBytes"/>; nada além do limite é lido.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="maxBytes"/> menor ou igual a zero.</exception>
+    Task<byte[]> DecryptFromFileAsync(string inputFilePath, string base64Key, byte[]? associatedData = null, int maxBytes = 16 * 1024 * 1024, CancellationToken cancellationToken = default);
 }

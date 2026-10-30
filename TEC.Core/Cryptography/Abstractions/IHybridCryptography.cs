@@ -39,10 +39,25 @@ public interface IHybridCryptography
     Task EncryptToFileAsync(byte[] data, string outputFilePath, RsaKey publicKey, CancellationToken cancellationToken = default);
 
     /// <summary>Lê um arquivo criptografado do disco e retorna os dados binários descriptografados em memória.</summary>
-    Task<byte[]> DecryptFromFileAsync(string inputFilePath, string privateKeyPem, CancellationToken cancellationToken = default);
+    /// <param name="inputFilePath">Caminho do arquivo criptografado (formato de <c>EncryptToFileAsync</c>).</param>
+    /// <param name="privateKeyPem">Chave privada RSA em PEM.</param>
+    /// <param name="maxBytes">Tamanho máximo do arquivo, em bytes. Padrão: 16 MiB (<c>HybridCryptography.DefaultMaxFileBytes</c>).</param>
+    /// <param name="cancellationToken">Cancelamento da operação.</param>
+    /// <exception cref="InvalidDataException">O arquivo passa de <paramref name="maxBytes"/>; nada além do limite é lido.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="maxBytes"/> menor ou igual a zero.</exception>
+    Task<byte[]> DecryptFromFileAsync(string inputFilePath, string privateKeyPem, int maxBytes = 16 * 1024 * 1024, CancellationToken cancellationToken = default);
 
     /// <summary>Lê um arquivo criptografado do disco e retorna os dados binários descriptografados com chave privada já importada.</summary>
-    Task<byte[]> DecryptFromFileAsync(string inputFilePath, RsaKey privateKey, CancellationToken cancellationToken = default);
+    /// <param name="inputFilePath">Caminho do arquivo criptografado (formato de <c>EncryptToFileAsync</c>).</param>
+    /// <param name="privateKey">Chave privada RSA já importada.</param>
+    /// <param name="maxBytes">
+    /// Tamanho máximo do arquivo, em bytes. Padrão: 16 MiB (<c>HybridCryptography.DefaultMaxFileBytes</c>). O arquivo
+    /// inteiro vai para a memória; para arquivos maiores, use <c>EncryptFileAsync</c>/<c>DecryptFileAsync</c> (streaming).
+    /// </param>
+    /// <param name="cancellationToken">Cancelamento da operação.</param>
+    /// <exception cref="InvalidDataException">O arquivo passa de <paramref name="maxBytes"/>; nada além do limite é lido.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="maxBytes"/> menor ou igual a zero.</exception>
+    Task<byte[]> DecryptFromFileAsync(string inputFilePath, RsaKey privateKey, int maxBytes = 16 * 1024 * 1024, CancellationToken cancellationToken = default);
 
     /// <summary>Criptografa um arquivo do disco para outro em streaming, de forma atômica (chave AES efêmera cifrada com RSA no cabeçalho).</summary>
     Task EncryptFileAsync(string inputFilePath, string outputFilePath, string publicKeyPem, CancellationToken cancellationToken = default);

@@ -176,4 +176,55 @@ public class AsymmetricCryptographyTests
                 Directory.Delete(tempDir, recursive: true);
         }
     }
+
+    // ---------- DecryptFromFileAsync: limite de tamanho ----------
+
+    [Test]
+    public async Task Hybrid_DecryptFromFileAsync_AboveLimit_FailsClosed()
+    {
+        var hybrid = new HybridCryptography();
+        using var publicKey = RsaKey.FromPublicKeyPem(Keys.PublicKeyPem);
+        using var privateKey = RsaKey.FromPrivateKeyPem(Keys.PrivateKeyPem);
+        var data = RandomNumberGenerator.GetBytes(2048);
+        var path = Path.Combine(Path.GetTempPath(), $"tec-hybrid-limite-{Guid.NewGuid():N}.bin");
+        try
+        {
+            await hybrid.EncryptToFileAsync(data, path, publicKey);
+            int size = (int)new FileInfo(path).Length;
+
+            await Assert.That(await hybrid.DecryptFromFileAsync(path, privateKey, maxBytes: size)).IsEquivalentTo(data, CollectionOrdering.Matching);
+            await Assert.That(async () => await hybrid.DecryptFromFileAsync(path, privateKey, maxBytes: size - 1))
+                .ThrowsExactly<InvalidDataException>();
+            await Assert.That(async () => await hybrid.DecryptFromFileAsync(path, Keys.PrivateKeyPem, maxBytes: size - 1))
+                .ThrowsExactly<InvalidDataException>();
+            await Assert.That(async () => await hybrid.DecryptFromFileAsync(path, privateKey, maxBytes: 0))
+                .Throws<ArgumentOutOfRangeException>();
+            await Assert.That(async () => await hybrid.DecryptFromFileAsync(path, Keys.PrivateKeyPem, maxBytes: -5))
+                .Throws<ArgumentOutOfRangeException>();
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Test]
+    public async Task Hybrid_DecryptFromFileAsync_HugeFile_RefusedByDefaultLimit()
+    {
+        var hybrid = new HybridCryptography();
+        using var privateKey = RsaKey.FromPrivateKeyPem(Keys.PrivateKeyPem);
+        var path = Path.Combine(Path.GetTempPath(), $"tec-hybrid-grande-{Guid.NewGuid():N}.bin");
+        try
+        {
+            await using (var stream = File.Create(path))
+                stream.SetLength(HybridCryptography.DefaultMaxFileBytes + 1L);
+
+            await Assert.That(async () => await hybrid.DecryptFromFileAsync(path, privateKey))
+                .ThrowsExactly<InvalidDataException>();
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
 }

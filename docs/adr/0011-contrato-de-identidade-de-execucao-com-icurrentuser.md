@@ -42,7 +42,7 @@ Definir no `TEC.Core` os contratos puros [`ICurrentUser`](../../TEC.Core/Securit
 ## ⚖️ Consequências
 
 ### Positivas
-- **Desacoplamento Total:** O `TEC.ORM` e os agregados de domínio auditam quem executou a ação sem saber se a execução veio de uma API REST, de uma fila de mensageria ou de um console job.
+- **Desacoplamento do ASP.NET Core:** O `TEC.ORM` e os agregados de domínio auditam quem executou a ação sem saber se a execução veio de uma API REST, de uma fila de mensageria ou de um console job.
 - **Conformidade com LGPD:** Tabelas de banco gravam GUIDs opacos de auditoria em vez de dados pessoais nominativos.
 - **Implementação Especializada no `TEC.Security`:** O pacote `TEC.Security` é quem provê a implementação concreta de `ICurrentUser` a partir do `ClaimsPrincipal` do token JWT, mantendo o `TEC.Core` livre de dependências de ASP.NET Core.
 

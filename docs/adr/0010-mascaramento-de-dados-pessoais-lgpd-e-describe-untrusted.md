@@ -39,8 +39,8 @@ Implementar no [`SensitiveDataMasker`](../../TEC.Core/Text/Masking/SensitiveData
 ## ⚖️ Consequências
 
 ### Positivas
-- **Conformidade Regulatória Imediata:** Facilita a adequação a auditorias LGPD e PCI-DSS em todos os serviços.
-- **Logs Limpos e Blindados:** Elimina o risco de vazamento involuntário de senhas e dados confidenciais colados em formulários.
+- **Auditoria:** os mascaradores padronizam o que pode aparecer em tela e em log, o que ajuda nas auditorias LGPD e PCI-DSS (o componente não substitui a análise de conformidade da aplicação).
+- **Logs sem o texto recusado:** `DescribeUntrusted` registra só o tamanho e um identificador, sem reproduzir senhas ou dados colados no campo errado.
 - **Integridade de Codificação:** Nenhuma string é corrompida por corte incorreto de emojis ou símbolos especiais.
 
 ### Negativas / Trade-offs

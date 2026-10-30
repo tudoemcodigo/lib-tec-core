@@ -8,17 +8,17 @@
 
 **Primitivas reutilizáveis para aplicações .NET brasileiras:** resultados e erros, respostas de API, documentos, datas e dias úteis, criptografia, CSV e concorrência.
 
-A fundação dos componentes TEC · .NET 8 e 10 · Native AOT · sem dependências pesadas
+A fundação dos componentes TEC · .NET 10 · Native AOT · sem dependências pesadas
 
 [![CI](https://github.com/tudoemcodigo/lib-tec-core/actions/workflows/ci.yml/badge.svg)](https://github.com/tudoemcodigo/lib-tec-core/actions/workflows/ci.yml)
-[![.NET](https://img.shields.io/badge/.NET-8.0%20%7C%2010.0-512BD4?logo=dotnet&logoColor=white)](docs/compatibilidade.md)
-[![Native AOT](https://img.shields.io/badge/Native%20AOT-compat%C3%ADvel-512BD4)](docs/compatibilidade.md)
-[![Versão](https://img.shields.io/badge/vers%C3%A3o-0.0.1-blue)](CHANGELOG.md)
+[![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white)](https://github.com/tudoemcodigo/lib-tec-core/blob/main/docs/compatibilidade.md)
+[![Native AOT](https://img.shields.io/badge/Native%20AOT-compat%C3%ADvel-512BD4)](https://github.com/tudoemcodigo/lib-tec-core/blob/main/docs/compatibilidade.md)
+[![Versão](https://img.shields.io/badge/vers%C3%A3o-0.0.1-blue)](https://github.com/tudoemcodigo/lib-tec-core/blob/main/CHANGELOG.md)
 [![NuGet](https://img.shields.io/badge/nuget-GitHub%20Packages-0969da?logo=github)](https://github.com/orgs/tudoemcodigo/packages)
-[![SLSA](https://img.shields.io/badge/SLSA-Level%202+-0969da?logo=security)](.github/workflows/README.md)
-[![Licença: Apache 2.0](https://img.shields.io/badge/licen%C3%A7a-Apache%202.0-blue)](LICENSE)
+[![SLSA](https://img.shields.io/badge/SLSA-Level%202+-0969da?logo=security)](#%EF%B8%8F-seguran%C3%A7a--testes)
+[![Licença: Apache 2.0](https://img.shields.io/badge/licen%C3%A7a-Apache%202.0-blue)](https://github.com/tudoemcodigo/lib-tec-core/blob/main/LICENSE)
 
-[📥 Instalação](docs/instalacao.md) · [🚀 Início rápido](#-início-rápido) · [📚 Documentação](docs/README.md) · [📝 Changelog](CHANGELOG.md) · [⚙️ CI/CD](.github/workflows/README.md)
+[📥 Instalação](https://github.com/tudoemcodigo/lib-tec-core/blob/main/docs/instalacao.md) · [🚀 Início rápido](#-início-rápido) · [📚 Documentação](https://github.com/tudoemcodigo/lib-tec-core/blob/main/docs/README.md) · [📝 Changelog](https://github.com/tudoemcodigo/lib-tec-core/blob/main/CHANGELOG.md) · [⚙️ CI/CD](https://github.com/tudoemcodigo/lib-tec-core/blob/main/.github/workflows/README.md)
 
 </div>
 
@@ -53,17 +53,23 @@ O pacote usa APIs nativas do .NET sempre que possível e não depende de ASP.NET
 |---|---|---|---|
 | `TEC.Core` | Abstrações e implementações comuns para os componentes TEC e aplicações .NET | Sempre | `Microsoft.Extensions.DependencyInjection.Abstractions` |
 
+## 🧬 Ecossistema TEC
+
+Os componentes abaixo referenciam o `TEC.Core`:
+
 ```mermaid
 flowchart LR
     C["🧰 TEC.Core<br/><sub>base compartilhada</sub>"] --> V["🔐 TEC.Vault"]
     C --> Q["🔀 TEC.Cqrs"]
     C --> O["🗄️ TEC.ORM"]
     C --> M["📨 TEC.Messaging"]
+    C --> S["🛡️ TEC.Security"]
+    C --> H["🌐 TEC.Http"]
 ```
 
 ## 📥 Instalação
 
-O pacote é distribuído no GitHub Packages. Configure o feed conforme [o guia de instalação](docs/instalacao.md) e autentique o NuGet com uma credencial que tenha leitura dos pacotes da organização.
+O pacote é distribuído no GitHub Packages. Configure o feed conforme [o guia de instalação](https://github.com/tudoemcodigo/lib-tec-core/blob/main/docs/instalacao.md) e autentique o NuGet com uma credencial que tenha leitura dos pacotes da organização.
 
 ```bash
 dotnet add package TEC.Core --version 0.0.1
@@ -86,27 +92,27 @@ using TEC.Core.DependencyInjection;
 services.AddTecCore();
 ```
 
-Veja exemplos completos e opções em [Common](docs/common.md), [Injeção de dependência](docs/injecao-dependencia.md) e nos demais guias.
+Veja exemplos completos e opções em [Common](https://github.com/tudoemcodigo/lib-tec-core/blob/main/docs/common.md), [Injeção de dependência](https://github.com/tudoemcodigo/lib-tec-core/blob/main/docs/injecao-dependencia.md) e nos demais guias.
 
 ## 📚 Documentação
 
-- [Índice completo](docs/README.md)
-- [Instalação e configuração do feed](docs/instalacao.md)
-- [Compatibilidade, Native AOT e trimming](docs/compatibilidade.md)
-- [Segurança e limites de responsabilidade](docs/seguranca.md)
-- [Testes, carga e benchmarks](docs/testes.md)
-- [Desenvolvimento e publicação](docs/desenvolvimento.md)
-- [Decisões de arquitetura](docs/adr/README.md)
-- [Samples](samples/README.md)
-- [Pipelines e publicação](.github/workflows/README.md)
+- [Índice completo](https://github.com/tudoemcodigo/lib-tec-core/blob/main/docs/README.md)
+- [Instalação e configuração do feed](https://github.com/tudoemcodigo/lib-tec-core/blob/main/docs/instalacao.md)
+- [Compatibilidade, Native AOT e trimming](https://github.com/tudoemcodigo/lib-tec-core/blob/main/docs/compatibilidade.md)
+- [Segurança e limites de responsabilidade](https://github.com/tudoemcodigo/lib-tec-core/blob/main/docs/seguranca.md)
+- [Testes, carga e benchmarks](https://github.com/tudoemcodigo/lib-tec-core/blob/main/docs/testes.md)
+- [Desenvolvimento e publicação](https://github.com/tudoemcodigo/lib-tec-core/blob/main/docs/desenvolvimento.md)
+- [Decisões de arquitetura](https://github.com/tudoemcodigo/lib-tec-core/blob/main/docs/adr/README.md)
+- [Samples](https://github.com/tudoemcodigo/lib-tec-core/blob/main/samples/README.md)
+- [Pipelines e publicação](https://github.com/tudoemcodigo/lib-tec-core/blob/main/.github/workflows/README.md)
 
 ## ⚡ Compatibilidade
 
-O pacote mira `net8.0` e `net10.0`. Compatibilidade com Native AOT e trimming é documentada e verificada no CI; consulte a [matriz de compatibilidade](docs/compatibilidade.md) para limites e detalhes por módulo.
+O pacote mira `net10.0`. Compatibilidade com Native AOT e trimming é documentada e verificada no CI; consulte a [matriz de compatibilidade](https://github.com/tudoemcodigo/lib-tec-core/blob/main/docs/compatibilidade.md) para limites e detalhes por módulo.
 
 ## 🛡️ Segurança · 🧪 Testes
 
-O TEC.Core implementa mecanismos reutilizáveis; cada aplicação continua responsável por configuração, autorização, gestão de chaves e tratamento de dados. Consulte [Segurança](docs/seguranca.md) antes de selecionar algoritmos ou definir armazenamento de segredos.
+O TEC.Core implementa mecanismos reutilizáveis; cada aplicação continua responsável por configuração, autorização, gestão de chaves e tratamento de dados. Consulte [Segurança](https://github.com/tudoemcodigo/lib-tec-core/blob/main/docs/seguranca.md) antes de selecionar algoritmos ou definir armazenamento de segredos.
 
 Para compilar e executar a suíte:
 
@@ -118,6 +124,6 @@ dotnet test --solution TEC.Core.slnx -c Release
 
 ## 🤝 Contribuição · 🏷️ Versionamento · 📄 Licença
 
-- **Contribuição**: mudanças devem preservar os contratos públicos e incluir testes de comportamento; consulte [Desenvolvimento](docs/desenvolvimento.md) e [AGENTS.md](AGENTS.md).
+- **Contribuição**: mudanças devem preservar os contratos públicos e incluir testes de comportamento; consulte [Desenvolvimento](https://github.com/tudoemcodigo/lib-tec-core/blob/main/docs/desenvolvimento.md) e [AGENTS.md](https://github.com/tudoemcodigo/lib-tec-core/blob/main/AGENTS.md).
 - **Versionamento**: SemVer; a versão inicial deste projeto é `0.0.1`.
-- **Licença**: [Apache 2.0](LICENSE) — consulte [NOTICE](NOTICE) para informações de atribuição.
+- **Licença**: [Apache 2.0](https://github.com/tudoemcodigo/lib-tec-core/blob/main/LICENSE) — consulte [NOTICE](https://github.com/tudoemcodigo/lib-tec-core/blob/main/NOTICE) para informações de atribuição.

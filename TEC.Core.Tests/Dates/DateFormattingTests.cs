@@ -34,6 +34,61 @@ public class DateFormattingTests
     [Test]
     public async Task TryParseDate_Invalid() => await Assert.That(DateFormatter.TryParseDate("31/02/2026", out _)).IsFalse();
 
+    // Regressão: ddMMyyyy vinha antes de yyyyMMdd e "20120101" virava 20/12/0101
+    [Test]
+    [Arguments("20120101", 2012, 1, 1)]   // yyyyMMdd que também casava com ddMMyyyy (dia 20, mês 12, ano 0101)
+    [Arguments("01012012", 2012, 1, 1)]   // ddMMyyyy: como yyyyMMdd daria mês 20, inválido
+    [Arguments("19121231", 1912, 12, 31)] // yyyyMMdd: como ddMMyyyy seria 19/12/1231
+    [Arguments("20261231", 2026, 12, 31)] // yyyyMMdd sem sobreposição (mês 26 inválido em ddMMyyyy)
+    [Arguments("31122026", 2026, 12, 31)] // ddMMyyyy de ano moderno: nunca confundido
+    [Arguments("29022024", 2024, 2, 29)]  // ddMMyyyy em ano bissexto
+    [Arguments(" 20120101 ", 2012, 1, 1)] // espaços nas pontas são ignorados
+    public async Task TryParseDate_CompactDigits_PrefersYearFirst(string text, int year, int month, int day)
+    {
+        await Assert.That(DateFormatter.TryParseDate(text, out var date)).IsTrue();
+        await Assert.That(date).IsEqualTo(new DateOnly(year, month, day));
+    }
+
+    // Ambiguidade documentada: válido nos dois formatos (ddMMyyyy com ano 0100-1299) vence yyyyMMdd
+    [Test]
+    [Arguments("10111213", 1011, 12, 13)] // e não 10/11/1213
+    [Arguments("05010110", 501, 1, 10)]   // e não 05/01/0110
+    public async Task TryParseDate_AmbiguousCompactDigits_ResolvesAsYearFirst(string text, int year, int month, int day)
+    {
+        await Assert.That(DateFormatter.TryParseDate(text, out var date)).IsTrue();
+        await Assert.That(date).IsEqualTo(new DateOnly(year, month, day));
+    }
+
+    [Test]
+    [Arguments("20120230")]  // 30/02 inválido como yyyyMMdd; como ddMMyyyy, mês 12 e ano 0230: 20/12/0230
+    public async Task TryParseDate_InvalidYearFirst_FallsBackToDayFirst(string text)
+    {
+        await Assert.That(DateFormatter.TryParseDate(text, out var date)).IsTrue();
+        await Assert.That(date).IsEqualTo(new DateOnly(230, 12, 20));
+    }
+
+    [Test]
+    [Arguments("2012010")]     // 7 dígitos
+    [Arguments("201201011")]   // 9 dígitos
+    [Arguments("00000000")]
+    [Arguments("99999999")]
+    [Arguments("2012-0101")]
+    [Arguments("２０１２０１０１")] // dígitos de largura total
+    [Arguments("")]
+    [Arguments(null)]
+    public async Task TryParseDate_MalformedCompactDigits_ReturnsFalse(string? text)
+    {
+        await Assert.That(DateFormatter.TryParseDate(text, out var date)).IsFalse();
+        await Assert.That(date).IsEqualTo(default(DateOnly));
+    }
+
+    [Test]
+    public async Task TryParseDateTime_CompactDigits_PrefersYearFirst()
+    {
+        await Assert.That(DateFormatter.TryParseDateTime("20120101", out var dateTime)).IsTrue();
+        await Assert.That(dateTime).IsEqualTo(new DateTime(2012, 1, 1));
+    }
+
     [Test]
     public async Task RelativeTime()
     {

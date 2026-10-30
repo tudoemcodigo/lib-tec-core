@@ -30,7 +30,7 @@ Implementar no `TEC.Core` os tipos [`Result`](../../TEC.Core/Common/Results/Resu
 ## ⚖️ Consequências
 
 ### Positivas
-- **Desempenho Extremo:** Validações e rejeições de negócio executam sem custo de stack trace.
+- **Menor custo por falha:** Validações e rejeições de negócio devolvem um `Result` e não pagam a captura de stack trace de uma exceção.
 - **Consistência Ecossistêmica:** Todos os componentes TEC compartilham os mesmos contratos de erro e status.
 - **Integração Fluida com APIs:** Conversão direta de `Result` para [`ApiResponse`](../../TEC.Core/Responses/ApiResponse.cs) sem código repetitivo em controladores ou Minimal APIs.
 

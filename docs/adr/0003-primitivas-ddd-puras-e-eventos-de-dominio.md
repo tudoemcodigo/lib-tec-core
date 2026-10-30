@@ -32,11 +32,12 @@ Definir primitivas fundamentais de DDD no namespace [`TEC.Core.Domain`](../../TE
 
 ### Positivas
 - **Independência Tecnológica:** O domínio pode ser compilado e testado sem carregar pacotes de banco de dados ou mensageria.
-- **Proteção Contra Vazamentos de Memória:** Teto claro e explícito de eventos pendentes por transação de agregado.
+- **Limite de memória por agregado:** `MaxPendingEvents` limita os eventos pendentes de cada agregado.
 - **Isolamento de Contratos:** Eventos de domínio são estritamente internos ao microsserviço. O `TEC.Messaging` é responsável por transformá-los em eventos de integração versionados para barramentos externos.
 
 ### Negativas / Trade-offs
 - Entidades que precisam de recursos avançados de ORM (como soft delete e auditoria automática) devem herdar das classes especializadas do `TEC.ORM` quando o domínio admitir esse acoplamento.
+- `GetHashCode` é constante por tipo concreto, para continuar estável quando o `Id` é atribuído. Em `HashSet`/`Dictionary` com muitas entidades do mesmo tipo, todas caem no mesmo balde e as operações ficam O(N²) no total. A decisão foi mantida em 2026-10-29; a limitação e as alternativas estão em [dominio.md](../dominio.md#domainentitytid).
 
 ---
 

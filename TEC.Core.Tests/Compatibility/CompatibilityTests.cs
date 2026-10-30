@@ -3,17 +3,17 @@ using System.Text;
 using System.Text.Json.Serialization;
 using TEC.Core.Common.Results;
 using TEC.Core.Common.Serialization;
+using TEC.Core.Cryptography.Hashing;
 using TEC.Core.Csv;
 using TEC.Core.Exceptions;
-using TEC.Core.Polyfills;
 using TEC.Core.Responses;
 using TEC.Core.Text.Codecs;
 
 namespace TEC.Core.Tests.Compatibility;
 
 /// <summary>
-/// Garante que os trechos com <c>#if NET9_0_OR_GREATER</c>/polyfills e os caminhos compatíveis com AOT
-/// se comportam de forma idêntica em <c>net8.0</c> e <c>net10.0</c> (os testes rodam nos dois runtimes).
+/// Confere as codificações (hexadecimal, Base64Url) contra implementações de referência e os caminhos compatíveis
+/// com AOT (JSON por contexto gerado, CSV sem <c>Activator</c>).
 /// </summary>
 public class CompatibilityTests
 {
@@ -31,7 +31,7 @@ public class CompatibilityTests
     [Test]
     public async Task DependencyInjectionAbstractions_MatchesTheRuntimeMajorVersion()
     {
-        // R11: o alvo net8.0 referenciava a Abstractions 10.x, impondo-a a apps ASP.NET Core 8 (framework compartilhado 8.x)
+        // R11: a Abstractions referenciada acompanha a versão major do runtime do alvo (framework compartilhado)
         var reference = typeof(TEC.Core.DependencyInjection.TecCoreOptions).Assembly.GetReferencedAssemblies()
             .Single(a => a.Name == "Microsoft.Extensions.DependencyInjection.Abstractions");
 
@@ -39,26 +39,27 @@ public class CompatibilityTests
     }
 
     [Test]
-    public async Task ToHexLower_MatchesReference()
-    {
-        foreach (var bytes in Samples)
-            await Assert.That(EncodingCompat.ToHexLower(bytes)).IsEqualTo(Convert.ToHexString(bytes).ToLowerInvariant());
-    }
-
-    [Test]
-    public async Task TryFromHex_AcceptsAnyCase_AndRoundTrips()
+    public async Task ComputeHash_HexIsLowercaseReference()
     {
         foreach (var bytes in Samples)
         {
-            var lower = EncodingCompat.ToHexLower(bytes);
-            await Assert.That(EncodingCompat.TryFromHex(lower, out var fromLower)).IsTrue();
-            await Assert.That(EncodingCompat.TryFromHex(lower.ToUpperInvariant(), out var fromUpper)).IsTrue();
-            await Assert.That(fromLower.SequenceEqual(bytes)).IsTrue();
-            await Assert.That(fromUpper.SequenceEqual(bytes)).IsTrue();
+            using var stream = new MemoryStream(bytes);
+            var expected = Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
+            await Assert.That(await HashHelper.ComputeHashAsync(stream)).IsEqualTo(expected);
+        }
+    }
+
+    [Test]
+    public async Task FixedTimeEqualsHex_AcceptsAnyCase()
+    {
+        foreach (var bytes in Samples)
+        {
+            var lower = Convert.ToHexString(bytes).ToLowerInvariant();
+            await Assert.That(HashHelper.FixedTimeEqualsHex(lower, lower.ToUpperInvariant())).IsTrue();
         }
 
-        await Assert.That(EncodingCompat.TryFromHex("aBcD", out var mixed)).IsTrue();
-        await Assert.That(mixed.SequenceEqual(new byte[] { 0xAB, 0xCD })).IsTrue();
+        await Assert.That(HashHelper.FixedTimeEqualsHex("aBcD", "ABcd")).IsTrue();
+        await Assert.That(HashHelper.FixedTimeEqualsHex("abcd", "abce")).IsFalse();
     }
 
     [Test]
@@ -70,18 +71,18 @@ public class CompatibilityTests
     [Arguments("0x0a")]
     [Arguments("０１")] // dígitos de largura total (não ASCII)
     [Arguments("٠١")]           // dígitos arábicos
-    public async Task TryFromHex_InvalidInput_ReturnsFalse(string hex)
+    public async Task FixedTimeEqualsHex_InvalidInput_ReturnsFalse(string hex)
     {
-        await Assert.That(EncodingCompat.TryFromHex(hex, out _)).IsFalse();
+        await Assert.That(HashHelper.FixedTimeEqualsHex(hex, hex)).IsFalse();
         // Mesmo resultado da API do .NET (que lança em vez de retornar false)
         await Assert.That(() => Convert.FromHexString(hex)).Throws<FormatException>();
     }
 
     [Test]
-    public async Task TryFromHex_Empty_ReturnsEmptyArray()
+    public async Task FixedTimeEqualsHex_Empty_IsEqual()
     {
-        await Assert.That(EncodingCompat.TryFromHex("", out var bytes)).IsTrue();
-        await Assert.That(bytes.Length).IsEqualTo(0);
+        await Assert.That(HashHelper.FixedTimeEqualsHex("", "")).IsTrue();
+        await Assert.That(HashHelper.FixedTimeEqualsHex("", "00")).IsFalse();
     }
 
     [Test]
@@ -102,16 +103,13 @@ public class CompatibilityTests
         {
             var expected = Convert.ToBase64String(bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_');
             await Assert.That(Base64UrlEncoder.Encode(bytes)).IsEqualTo(expected);
-#if NET9_0_OR_GREATER
-            await Assert.That(Base64UrlEncoder.Encode(bytes)).IsEqualTo(System.Buffers.Text.Base64Url.EncodeToString(bytes));
-#endif
         }
     }
 
     [Test]
-    public async Task OverloadResolutionPriority_WorksOnEveryTarget()
+    public async Task OverloadResolutionPriority_ResolvesNullToDefaultMessage()
     {
-        // No net8.0 o atributo vem do polyfill interno; a chamada abaixo seria ambígua sem ele
+        // Sem [OverloadResolutionPriority] a chamada abaixo seria ambígua
         var exception = new ConcurrencyException(null);
         await Assert.That(exception.Message).IsEqualTo(ConcurrencyException.DefaultMessage);
     }
