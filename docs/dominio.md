@@ -11,6 +11,7 @@
   - [DomainEntity&lt;TId&gt;](#domainentitytid)
   - [AggregateRoot&lt;TId&gt;](#aggregateroottid)
   - [IDomainEvent e IHasDomainEvents](#idomainevent-e-ihasdomainevents)
+  - [Entidades persistidas sem depender do ORM](#entidades-persistidas-sem-depender-do-orm)
 - [⚙️ Opções](#️-opções)
 - [❌ Erros](#-erros)
 - [🛡️ Segurança](#️-segurança)
@@ -23,6 +24,7 @@
 | Namespace | Tipos públicos | Para que serve |
 |---|---|---|
 | `TEC.Core.Domain` | `DomainEntity<TId>`, `AggregateRoot<TId>`, `IDomainEvent`, `IHasDomainEvents` | Modelar agregados que registram fatos de negócio, coletados pela persistência no commit |
+| `TEC.Core.Domain` | `IEntity<TKey>`, `ISoftDelete`, `IAuditable`, `AuditableDomainEntity<TId>`, `AuditableAggregateRoot<TId>` | Entidades com exclusão lógica e autoria preenchidas pelo TEC.ORM, sem o projeto de domínio referenciar o ORM |
 
 ```mermaid
 flowchart LR
@@ -102,6 +104,32 @@ public sealed class Pedido : AggregateRoot<Guid>
 | `IHasDomainEvents` | `DomainEvents`, `ClearDomainEvents()` | `AggregateRoot<TId>` ou uma raiz própria |
 
 Use `OccurredAt` vindo do `TimeProvider` do caso de uso (nunca `DateTime.Now`), para os testes serem determinísticos.
+
+### Entidades persistidas sem depender do ORM
+
+> `TEC.Core.Domain` · `IEntity<TKey>`, `ISoftDelete`, `IAuditable`, `AuditableDomainEntity<TId>`, `AuditableAggregateRoot<TId>`
+
+O `IOrmRepository<TEntity, TKey>` do TEC.ORM aceita qualquer entidade que implemente `IEntity<TKey>` e `ISoftDelete`, e grava a
+autoria de quem implementa `IAuditable`. Como os três contratos ficam aqui, o projeto de domínio referencia só o TEC.Core
+(Clean Architecture: o domínio não conhece a persistência). Auditoria histórica, dado sensível e ordenação ficam no mapeamento
+do EF Core, na camada de infraestrutura (ver a Fluent API do TEC.ORM).
+
+| Base | Herda de | Use para |
+|---|---|---|
+| `AuditableAggregateRoot<TId>` | `AggregateRoot<TId>` | Raiz de agregado persistida, com eventos de domínio |
+| `AuditableDomainEntity<TId>` | `DomainEntity<TId>` | Entidade filha persistida (ex.: item do pedido) |
+
+```csharp
+public sealed class Pedido : AuditableAggregateRoot<Guid>
+{
+    private Pedido() { } // EF Core
+
+    public static Result<Pedido> Criar(Guid clienteId, DateTimeOffset agora) { /* invariantes */ }
+}
+```
+
+Os campos de exclusão lógica e autoria têm setter privado: só a persistência os grava. O `Id` tem setter protegido; o EF Core o
+preenche pelos metadados.
 
 ---
 

@@ -6,9 +6,10 @@ namespace TEC.Core.Domain;
 /// </summary>
 /// <typeparam name="TId">Tipo do identificador.</typeparam>
 /// <remarks>
-/// Sem dependência de persistência. Para soft delete e auditoria automática use as entidades do TEC.ORM.
+/// Sem dependência de persistência. Para exclusão lógica e autoria preenchidas pelo TEC.ORM sem referenciá-lo no domínio, use
+/// <see cref="AuditableDomainEntity{TId}"/> ou <see cref="AuditableAggregateRoot{TId}"/>.
 /// </remarks>
-public abstract class DomainEntity<TId> : IEquatable<DomainEntity<TId>>
+public abstract class DomainEntity<TId> : IEquatable<DomainEntity<TId>>, IEntity<TId>
     where TId : notnull
 {
     /// <summary>Identificador da entidade.</summary>
