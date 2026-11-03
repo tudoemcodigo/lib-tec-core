@@ -29,6 +29,7 @@ A fundação dos componentes TEC · .NET 10 · Native AOT · sem dependências p
 - [🧬 Ecossistema TEC](#-ecossistema-tec)
 - [📥 Instalação](#-instalação)
 - [🚀 Início rápido](#-início-rápido)
+- [🧩 Diagrama de arquitetura](#-diagrama-de-arquitetura)
 - [📚 Documentação](#-documentação)
 - [⚡ Compatibilidade](#-compatibilidade)
 - [🛡️ Segurança · 🧪 Testes](#️-segurança--testes)
@@ -93,6 +94,81 @@ services.AddTecCore();
 ```
 
 Veja exemplos completos e opções em [Common](https://github.com/tudoemcodigo/lib-tec-core/blob/main/docs/common.md), [Injeção de dependência](https://github.com/tudoemcodigo/lib-tec-core/blob/main/docs/injecao-dependencia.md) e nos demais guias.
+
+## 🧩 Diagrama de arquitetura
+
+Componentes e ligações do `TEC.Core`, gerados pelo [GitDiagram](https://gitdiagram.com/tudoemcodigo/lib-tec-core) a partir da `main` em 02/11/2026. O diagrama é gerado por IA a partir de uma amostra do código: use-o como mapa de leitura, não como contrato.
+
+```mermaid
+flowchart TD
+
+subgraph group_common["Common contracts"]
+  node_results["Results and errors<br/>[Result.cs]"]
+  node_guards["Argument guards<br/>[Guard.cs]"]
+  node_responses["API responses<br/>[ApiResponse.cs]"]
+  node_exceptions["Application exceptions<br/>[AppException.cs]"]
+  node_domain["Domain entities<br/>[AggregateRoot.cs]"]
+  node_serialization["JSON defaults<br/>[JsonDefaults.cs]"]
+end
+
+subgraph group_brazil["Brazilian domain"]
+  node_dates["Date formatting<br/>[DateFormatter.cs]"]
+  node_holidays["Holiday calendar<br/>[HolidayCalendar.cs]"]
+  node_holiday_sources["Holiday sources<br/>[Sources]"]
+  node_holiday_model["Holiday model<br/>[Holiday.cs]"]
+  node_business_days["Business days"]
+  node_timezones["Brazil time zone<br/>[BrazilTimeZone.cs]"]
+end
+
+subgraph group_data["Data and documents"]
+  node_csv_reader["CSV reader<br/>[CsvReader.cs]"]
+  node_csv_parser["CSV parser<br/>[CsvRecordParser.cs]"]
+  node_csv_writer["CSV writer<br/>[CsvWriter.cs]"]
+  node_documents["Document validation"]
+  node_masking["Sensitive data masking"]
+  node_text["Text utilities<br/>[Text]"]
+end
+
+subgraph group_crypto["Security primitives"]
+  node_cryptography["AES-GCM encryption"]
+  node_crypto_interfaces["Crypto abstractions"]
+  node_crypto_other["Other cryptography<br/>[Cryptography]"]
+end
+
+subgraph group_integration["Composition"]
+  node_di["Service registration"]
+  node_threading["Single-flight concurrency<br/>[SingleFlight.cs]"]
+end
+
+node_app(("Application caller"))
+
+node_app -->|"creates result"| node_results
+node_app -->|"uses response"| node_responses
+node_app -->|"registers services"| node_di
+node_responses -->|"maps errors"| node_results
+node_responses -->|"maps exceptions"| node_exceptions
+node_holidays -->|"filters holidays"| node_holiday_model
+node_holidays -->|"uses sources"| node_holiday_sources
+node_business_days -->|"queries provider"| node_holidays
+node_business_days -->|"uses time zone"| node_timezones
+node_csv_reader -->|"parses records"| node_csv_parser
+node_cryptography -->|"validates inputs"| node_guards
+node_cryptography -->|"implements contract"| node_crypto_interfaces
+
+
+classDef toneNeutral fill:#f8fafc,stroke:#334155,stroke-width:1.5px,color:#0f172a
+classDef toneBlue fill:#dbeafe,stroke:#2563eb,stroke-width:1.5px,color:#172554
+classDef toneAmber fill:#fef3c7,stroke:#d97706,stroke-width:1.5px,color:#78350f
+classDef toneMint fill:#dcfce7,stroke:#16a34a,stroke-width:1.5px,color:#14532d
+classDef toneRose fill:#ffe4e6,stroke:#e11d48,stroke-width:1.5px,color:#881337
+classDef toneIndigo fill:#e0e7ff,stroke:#4f46e5,stroke-width:1.5px,color:#312e81
+classDef toneTeal fill:#ccfbf1,stroke:#0f766e,stroke-width:1.5px,color:#134e4a
+class node_results,node_guards,node_responses,node_exceptions,node_domain,node_serialization toneBlue
+class node_dates,node_holidays,node_holiday_sources,node_holiday_model,node_business_days,node_timezones toneAmber
+class node_csv_reader,node_csv_parser,node_csv_writer,node_documents,node_masking,node_text toneMint
+class node_cryptography,node_crypto_interfaces,node_crypto_other toneRose
+class node_di,node_threading,node_app toneIndigo
+```
 
 ## 📚 Documentação
 
